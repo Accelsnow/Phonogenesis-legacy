@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import List, Tuple, Dict
+from typing import List
 
 
 @unique
@@ -34,7 +34,7 @@ class FeatureTypes(Enum):
     dummy2 = "dummy2"
     dummy3 = "dummy3"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value
 
 
@@ -144,3 +144,10 @@ class Features(Enum):
     def __str__(self) -> str:
         return self.value[1]
 
+
+def get_type_from_feature(feature: Features) -> FeatureTypes:
+    for type_ in FEATURE_LIB.keys():
+        if feature in FEATURE_LIB[type_]:
+            return type_
+
+    raise ModuleNotFoundError

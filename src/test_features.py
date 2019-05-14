@@ -15,3 +15,8 @@ class TestFeatures(unittest.TestCase):
 
         self.assertEqual(str(FeatureTypes.phonation), "phonation")
         self.assertEqual(str(FeatureTypes.vocal_fold_constricted), "vocal fold constricted")
+
+    def test_get_type_from_feature(self):
+        self.assertEqual(get_type_from_feature(Features.posterior), FeatureTypes.anteriority)
+        self.assertEqual(get_type_from_feature(Features.alveolar), FeatureTypes.specific_consonant_POA)
+        self.assertEqual(get_type_from_feature(Features.nasal_stop), FeatureTypes.manner)
