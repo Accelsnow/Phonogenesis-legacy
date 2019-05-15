@@ -150,4 +150,4 @@ def get_type_from_feature(feature: Features) -> FeatureTypes:
         if feature in FEATURE_LIB[type_]:
             return type_
 
-    raise ModuleNotFoundError
+    raise ModuleNotFoundError("The feature type requested does not exist")
