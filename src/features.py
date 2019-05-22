@@ -5,14 +5,15 @@ from sound import *
 from typing import List, Tuple, Dict
 
 
-def import_default() -> Tuple[Dict[str, str], List[Sound]]:
+def import_default() -> Tuple[Dict[str, str], List[Sound], Dict]:
     return _fetch_from_csv("defaultipa.csv")
 
 
-def _fetch_from_csv(filename: str) -> Tuple[Dict, List[Sound]]:
+def _fetch_from_csv(filename: str) -> Tuple[Dict, List[Sound], Dict]:
     feature_types = []
     sounds = []
-    feature_lib = {}
+    type_to_features = {}
+    feature_to_sounds = {}
 
     with open(filename, encoding='utf-8') as data_file:
         lines = csv.reader(data_file)
@@ -29,7 +30,7 @@ def _fetch_from_csv(filename: str) -> Tuple[Dict, List[Sound]]:
                 feature_types = line[1:line.index('', 1)]
 
                 for _type in feature_types:
-                    feature_lib[_type] = []
+                    type_to_features[_type] = []
 
                 header_solved = True
                 continue
@@ -42,18 +43,25 @@ def _fetch_from_csv(filename: str) -> Tuple[Dict, List[Sound]]:
             if len(features) != len(feature_types):
                 raise ImportError("Feature line \'%s\' does not align with types" % str(features))
 
+            _sound = Sound(line[0], features, feature_types)
+            sounds.append(_sound)
+
             for i in range(0, len(features)):
                 _feature = features[i]
                 _type = feature_types[i]
 
-                if _feature not in feature_lib[_type]:
-                    feature_lib[_type].append(_feature)
+                if _feature not in type_to_features[_type]:
+                    type_to_features[_type].append(_feature)
 
-            sounds.append(Sound(line[0], features, feature_types))
+                if _feature not in feature_to_sounds.keys():
+                    feature_to_sounds[_feature] = []
 
-    return feature_lib, sounds
+                feature_to_sounds[_feature].append(_sound)
+
+    return type_to_features, sounds, feature_to_sounds
 
 
 if __name__ == '__main__':
-    for sound in import_default()[1]:
-        print(str(sound))
+    d = import_default()[2]
+    for f in d:
+        print("%s - %s" % (f, [str(item) for item in d[f]]))
