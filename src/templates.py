@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import List, Dict
+from typing import List, Dict, Optional
+import warnings
 
 
 class Template:
@@ -30,8 +31,14 @@ class Template:
         return " ".join(self._components)
 
 
-def import_default_template() -> List[Template]:
+def import_default_template(features: Optional[List[str]]) -> List[Template]:
     templates = _fetch_template_csv("defaulttemplate.txt")
+
+    if features is None:
+        warnings.warn("The template has not been checked due to missing feature list.", category=Warning)
+    else:
+        if not template_fits_features(templates, features):
+            raise ImportError("Template does not conform to the given features.")
 
     return templates
 
@@ -59,9 +66,4 @@ def template_fits_features(templates: List[Template], features: List[str]) -> bo
 
 
 if __name__ == "__main__":
-    tmp = import_default_template()
-
-    # for t in tmp:
-    #     print(t)
-
-    print(template_fits_features(tmp, ["consonant", "vowel"]))
+    tmp = import_default_template(["consonant", "vowel"])
