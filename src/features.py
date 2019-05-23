@@ -5,11 +5,11 @@ from sound import *
 from typing import List, Tuple, Dict
 
 
-def import_default() -> Tuple[Dict[str, str], List[Sound], Dict]:
-    return _fetch_from_csv("defaultipa.csv")
+def import_default_features() -> Tuple[Dict[str, str], List[Sound], Dict]:
+    return _fetch_feature_csv("defaultipa.csv")
 
 
-def _fetch_from_csv(filename: str) -> Tuple[Dict, List[Sound], Dict]:
+def _fetch_feature_csv(filename: str) -> Tuple[Dict, List[Sound], Dict]:
     feature_types = []
     sounds = []
     type_to_features = {}
@@ -62,6 +62,6 @@ def _fetch_from_csv(filename: str) -> Tuple[Dict, List[Sound], Dict]:
 
 
 if __name__ == '__main__':
-    d = import_default()[2]
+    d = import_default_features()[2]
     for f in d:
         print("%s - %s" % (f, [str(item) for item in d[f]]))
