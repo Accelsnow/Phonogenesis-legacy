@@ -1,6 +1,9 @@
 from __future__ import annotations
 from typing import List, Dict, Optional
 import warnings
+import feature_lib
+
+templates = []  # type: List[Template]
 
 
 class Template:
@@ -11,15 +14,15 @@ class Template:
         self._components = components
         self._size = len(components)
 
-    def is_match(self, word: str, _dict: Dict) -> bool:
+    def is_match(self, word: str, dict_: Dict) -> bool:
         if len(word) != self._size:
             return False
 
         for i in range(0, self._size):
             char = word[i]
-            _type = self._components[i]
+            type_ = self._components[i]
 
-            if char not in _dict[_type]:
+            if char not in dict_[type_]:
                 return False
 
         return True
@@ -31,39 +34,20 @@ class Template:
         return " ".join(self._components)
 
 
-def import_default_template(features: Optional[List[str]]) -> List[Template]:
-    templates = _fetch_template_csv("defaulttemplate.txt")
-
-    if features is None:
-        warnings.warn("The template has not been checked due to missing feature list.", category=Warning)
-    else:
-        if not template_fits_features(templates, features):
-            raise ImportError("Template does not conform to the given features.")
-
-    return templates
+def import_default_template() -> None:
+    _fetch_template_csv("defaulttemplate.txt")
 
 
-def _fetch_template_csv(filename: str) -> List[Template]:
-    templates = []
-
+def _fetch_template_csv(filename: str) -> None:
     with open(filename, encoding='utf-8') as data_file:
         lines = [l.rstrip('\n') for l in data_file.readlines()]
 
         for line in lines:
             components = line.split(" ")
-            templates.append(Template(components))
 
-    return templates
+            for comp in components:
+                if comp not in feature_lib.features:
+                    raise ImportError("Template %s does not conform to the given features." % str(template))
 
-
-def template_fits_features(templates: List[Template], features: List[str]) -> bool:
-    for template in templates:
-        for comp_block in template.get_components():
-            if comp_block not in features:
-                return False
-
-    return True
-
-
-if __name__ == "__main__":
-    tmp = import_default_template(["consonant", "vowel"])
+            template = Template(components)
+            templates.append(template)
