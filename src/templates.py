@@ -1,9 +1,7 @@
 from __future__ import annotations
-from typing import List, Dict, Optional
+from typing import List, Dict
 import warnings
 import feature_lib
-
-templates = []  # type: List[Template]
 
 
 class Template:
@@ -34,11 +32,13 @@ class Template:
         return " ".join(self._components)
 
 
-def import_default_template() -> None:
-    _fetch_template_csv("defaulttemplate.txt")
+def import_default_templates(feature_pool: List[str]) -> List[Template]:
+    return _fetch_template_csv("defaulttemplate.txt", feature_pool)
 
 
-def _fetch_template_csv(filename: str) -> None:
+def _fetch_template_csv(filename: str, feature_pool: List[str]) -> List[Template]:
+    templates = []  # type: List[Template]
+
     with open(filename, encoding='utf-8') as data_file:
         lines = [l.rstrip('\n') for l in data_file.readlines()]
 
@@ -46,8 +46,10 @@ def _fetch_template_csv(filename: str) -> None:
             components = line.split(" ")
 
             for comp in components:
-                if comp not in feature_lib.features:
+                if comp not in feature_pool:
                     raise ImportError("Template %s does not conform to the given features." % str(template))
 
             template = Template(components)
             templates.append(template)
+
+    return templates

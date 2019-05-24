@@ -21,6 +21,9 @@ class Particle:
     def __hash__(self):
         return 0
 
+    def __str__(self):
+        return "[ %s ]" % ",".join(self._features)
+
 
 def import_default_features() -> Tuple[
         List[str], List[Sound], Dict[str, List[str]], Dict[str, List[Sound]], Dict[Particle, Sound]]:
