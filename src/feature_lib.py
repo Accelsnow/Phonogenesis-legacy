@@ -33,10 +33,10 @@ class Particle:
 
         return True
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return 0
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "[%s]" % ",".join(self._features)
 
 

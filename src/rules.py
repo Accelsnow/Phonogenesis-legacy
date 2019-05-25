@@ -21,9 +21,8 @@ class Rule:
 
     def __str__(self) -> str:
         return "%s -> %s / %s _ %s" % (
-            "+".join([str(s) for s in self._A]), "+".join([str(s) for s in self._B]),
-            "+".join([str(s) for s in self._C]),
-            "+".join([str(s) for s in self._D]))
+            "".join([str(s) for s in self._A]), "".join([str(s) for s in self._B]),
+            "".join([str(s) for s in self._C]), "".join([str(s) for s in self._D]))
 
 
 def import_default_rules(feature_pool: List[str]) -> List[Rule]:

@@ -25,3 +25,6 @@ if __name__ == '__main__':
     rules = import_default_rules(features)
 
     print([str(r) for r in rules])
+
+    # sample template gen
+    print(templates[0].generate_word_list(feature_to_sounds))

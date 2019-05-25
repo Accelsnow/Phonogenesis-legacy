@@ -1,1 +1,1 @@
-[non syllabic]>[syllabic]/[non syllabic]_[non syllabic]
+[voiced]>[voiceless]/[syllabic]_[syllabic]
