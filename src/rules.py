@@ -1,7 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict, Optional
-import csv
-import warnings
+from typing import List, Optional
 from feature_lib import Particle
 
 
@@ -28,11 +26,11 @@ class Rule:
             "+".join([str(s) for s in self._D]))
 
 
-def import_default_rules() -> List[Rule]:
-    return _fetch_rule_csv("defaultrule.txt")
+def import_default_rules(feature_pool: List[str]) -> List[Rule]:
+    return _fetch_rule_csv(feature_pool, "defaultrule.txt")
 
 
-def _fetch_rule_csv(filename: str) -> List[Rule]:
+def _fetch_rule_csv(feature_pool: List[str], filename: str) -> List[Rule]:
     rules = []  # type: List[Rule]
 
     with open(filename, encoding='utf-8') as data_file:
@@ -44,7 +42,7 @@ def _fetch_rule_csv(filename: str) -> List[Rule]:
             if len(mid_break) != 2:
                 raise ImportError("Invalid rule format: %s" % line)
 
-            action_break = mid_break[0].split("-")
+            action_break = mid_break[0].split(">")
             condition_break = mid_break[1].split("_")
 
             if len(action_break) != 2 or len(condition_break) != 2:
@@ -55,17 +53,23 @@ def _fetch_rule_csv(filename: str) -> List[Rule]:
             csec = condition_break[0]
             dsec = condition_break[1]
 
-            rules.append(Rule(_sec_to_particles(asec), _sec_to_particles(bsec), _sec_to_particles(csec),
-                              _sec_to_particles(dsec)))
+            rules.append(Rule(_sec_to_particles(feature_pool, asec), _sec_to_particles(feature_pool, bsec),
+                              _sec_to_particles(feature_pool, csec), _sec_to_particles(feature_pool, dsec)))
     return rules
 
 
-def _sec_to_particles(sec: str) -> List[Particle]:
+def _sec_to_particles(feature_pool: List[str], sec: str) -> List[Particle]:
     particles = []  # type: List[Particle]
 
-    parts = sec.split("+")
+    parts = sec.lstrip('[').rstrip(']').split("][")
 
     for part in parts:
-        particles.append(Particle(part.split(",")))
+        features = part.split(",")
+
+        for feature in features:
+            if feature not in feature_pool:
+                raise ImportError("Rule sector %s does not conform to the given features." % sec)
+
+        particles.append(Particle(features))
 
     return particles

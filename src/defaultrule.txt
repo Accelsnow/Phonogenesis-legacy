@@ -1,1 +1,1 @@
-consonant-vowel/consonant_consonant
+[non syllabic]>[syllabic]/[non syllabic]_[non syllabic]

@@ -8,6 +8,21 @@ from typing import List, Tuple, Dict
 class Particle:
     _features: List[str]
 
+    def get_matching_sounds(self, feature_to_sounds: Dict[str, List[Sound]]) -> List[Sound]:
+        result = None
+
+        for feature in self._features:
+            curr_sounds = feature_to_sounds[feature]
+
+            if result is None:
+                result = [s for s in curr_sounds]
+            else:
+                for sound in result:
+                    if sound not in curr_sounds:
+                        result.remove(sound)
+
+        return result
+
     def __init__(self, features_: List[str]) -> None:
         self._features = features_
 
@@ -22,16 +37,16 @@ class Particle:
         return 0
 
     def __str__(self):
-        return "[ %s ]" % ",".join(self._features)
+        return "[%s]" % ",".join(self._features)
 
 
 def import_default_features() -> Tuple[
-        List[str], List[Sound], Dict[str, List[str]], Dict[str, List[Sound]], Dict[Particle, Sound]]:
+    List[str], List[Sound], Dict[str, List[str]], Dict[str, List[Sound]], Dict[Particle, Sound]]:
     return _fetch_feature_csv("defaultipa.csv")
 
 
 def _fetch_feature_csv(filename: str) -> Tuple[
-        List[str], List[Sound], Dict[str, List[str]], Dict[str, List[Sound]], Dict[Particle, Sound]]:
+    List[str], List[Sound], Dict[str, List[str]], Dict[str, List[Sound]], Dict[Particle, Sound]]:
     features = []  # type: List[str]
     type_to_features = {}  # type: Dict[str, List[str]]
     feature_to_sounds = {}  # type: Dict[str, List[Sound]]

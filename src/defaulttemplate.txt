@@ -1,2 +1,2 @@
-consonant vowel consonant
-consonant vowel consonant vowel
+[non syllabic]-[syllabic]-[non syllabic]
+[non syllabic]-[syllabic]-[non syllabic]-[syllabic]
