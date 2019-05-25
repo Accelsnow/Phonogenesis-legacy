@@ -19,6 +19,9 @@ class Rule:
         self._C = c
         self._D = d
 
+    def apply(self, word: str) -> str:
+        pass
+
     def __str__(self) -> str:
         return "%s -> %s / %s _ %s" % (
             "".join([str(s) for s in self._A]), "".join([str(s) for s in self._B]),

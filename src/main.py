@@ -18,11 +18,11 @@ if __name__ == '__main__':
 
     print([str(s) for s in sounds])
 
-    templates = import_default_templates(features)
+    templates = import_default_templates(features)  # type: List[Template]
 
     print([str(t) for t in templates])
 
-    rules = import_default_rules(features)
+    rules = import_default_rules(features)  # type: List[Rule]
 
     print([str(r) for r in rules])
 

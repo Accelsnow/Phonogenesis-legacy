@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import List, Dict, Any
 
+_SYMBOL = {}  # type: Dict[str, Sound]
+
 
 class Sound:
     _features: List[str]
@@ -9,6 +11,11 @@ class Sound:
     def __init__(self, symbol: str, features: List[str]) -> None:
         self._features = features
         self._symbol = symbol
+
+        if symbol in _SYMBOL.keys():
+            raise ValueError("Duplicated symbol not allowed!")
+
+        _SYMBOL[symbol] = self
 
     def get_features(self) -> List[str]:
         return [f for f in self._features]
@@ -35,6 +42,9 @@ class Sound:
                         return features_to_sound[Particle(target_feature_arr)]
 
         raise AttributeError("Transformation failed. Target feature invalid.")
+
+    def __getitem__(self, item: str) -> Sound:
+        return _SYMBOL[item]
 
     def __str__(self) -> str:
         return self._symbol
