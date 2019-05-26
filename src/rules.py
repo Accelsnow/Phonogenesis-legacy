@@ -24,6 +24,10 @@ class Rule:
         self._C = c
         self._D = d
 
+    def get_info(self) -> Tuple[
+        List[Particle], Optional[Particle, str], Optional[List[Particle], str], Optional[List[Particle], str]]:
+        return self._A, self._B, self._C, self._D
+
     def apply(self, word: str, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> str:
         c_index = None
         c_fixed = False
