@@ -13,18 +13,18 @@ class Rule:
     A>B/C_D
     """
     _A: List[Particle]
-    _B: Optional[List[Particle], str]
+    _B: Optional[Particle, str]
     _C: Optional[List[Particle], str]
     _D: Optional[List[Particle], str]
 
-    def __init__(self, a: List[Particle], b: Optional[List[Particle], str], c: List[Particle],
+    def __init__(self, a: List[Particle], b: Optional[Particle, str], c: List[Particle],
                  d: List[Particle]) -> None:
         self._A = a
         self._B = b
         self._C = c
         self._D = d
 
-    def apply(self, word: str, feature_to_sounds: Dict[str, List[Sound]]) -> str:
+    def apply(self, word: str, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> str:
         c_index = None
         c_fixed = False
         c_matcher = None
@@ -49,7 +49,7 @@ class Rule:
             if self._D == NULL_SYMBOL:
                 d_index = None
             elif self._D == EDGE_SYMBOL:
-                d_index = len(word) - 1
+                d_index = len(word)
             else:
                 raise AttributeError("unknown string for D: %s" % self._D)
 
@@ -58,29 +58,27 @@ class Rule:
             d_matcher = Template(self._D).generate_word_list(feature_to_sounds)
 
         if c_fixed and d_fixed:
-            self._perform_transformation(c_index, d_index)
+            return self._perform_transformation(word, c_index, d_index, feature_to_type, feature_to_sounds)
         elif not c_fixed and d_fixed:
             c_size = len(c_matcher[0])
             for pattern in c_matcher:
                 try:
-                    loc = word.index(pattern) + c_size
+                    c_loc = word.index(pattern) + c_size
                 except ValueError:
                     continue
 
-                self._perform_transformation(loc, d_index)
+                return self._perform_transformation(word, c_loc, d_index, feature_to_type, feature_to_sounds)
 
         elif c_fixed and not d_fixed:
-            d_size = len(d_matcher[0])
             for pattern in d_matcher:
                 try:
-                    loc = word.index(pattern) + d_size
+                    d_loc = word.index(pattern)
                 except ValueError:
                     continue
 
-                self._perform_transformation(c_index, loc)
+                return self._perform_transformation(word, c_index, d_loc, feature_to_type, feature_to_sounds)
         else:
             c_size = len(c_matcher[0])
-            d_size = len(d_matcher[0])
             for c_pattern in c_matcher:
                 try:
                     c_loc = word.index(c_pattern) + c_size
@@ -89,20 +87,49 @@ class Rule:
 
                 for d_pattern in d_matcher:
                     try:
-                        d_loc = word.index(d_pattern) + d_size
+                        d_loc = word.index(d_pattern, c_loc + 1)
                     except ValueError:
                         continue
 
                     if d_loc > c_loc:
-                        self._perform_transformation(c_loc, d_loc)
+                        return self._perform_transformation(word, c_loc, d_loc, feature_to_type, feature_to_sounds)
 
-    def _perform_transformation(self, begin_index: Optional[int, None], end_index: Optional[int, None]) -> None:
-        pass
+        return word
+
+    def _perform_transformation(self, word: str, begin_index: Optional[int, None], end_index: Optional[int, None],
+                                feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> str:
+        targets_a = Template(self._A).generate_word_list(feature_to_sounds)
+        target_size = len(targets_a[0])
+
+        if begin_index is not None and end_index is None:
+            end_index = begin_index + target_size
+        elif begin_index is None and end_index is not None:
+            begin_index = end_index - target_size
+
+        for target in targets_a:
+
+            if begin_index is None and end_index is None:
+                try:
+                    begin_index = word.index(target)
+                    end_index = begin_index - target_size
+                except ValueError:
+                    continue
+
+            return self._do_replace(word, target, begin_index, end_index, feature_to_type, feature_to_sounds)
+
+    def _do_replace(self, word: str, target: str, begin_index: int, end_index: int, feature_to_type: Dict[str, str],
+                    feature_to_sounds: Dict[str, List[Sound]]) -> str:
+
+        if isinstance(self._B, str):
+            print("not implemented yet")
+        else:
+            dest_sound = Sound('', [])[target].get_transformed_sound(self._B, feature_to_type, feature_to_sounds)
+            return word[:begin_index] + str(dest_sound) + word[end_index:]
 
     def __str__(self) -> str:
         return "%s -> %s / %s _ %s" % (
-            "".join([str(s) for s in self._A]), "".join([str(s) for s in self._B]),
-            "".join([str(s) for s in self._C]), "".join([str(s) for s in self._D]))
+            "".join([str(s) for s in self._A]), str(self._B), "".join([str(s) for s in self._C]),
+            "".join([str(s) for s in self._D]))
 
 
 def import_default_rules(feature_pool: List[str]) -> List[Rule]:
@@ -132,7 +159,10 @@ def _fetch_rule_csv(feature_pool: List[str], filename: str) -> List[Rule]:
             csec = condition_break[0]
             dsec = condition_break[1]
 
-            rules.append(Rule(_sec_to_particles(feature_pool, asec), _sec_to_particles(feature_pool, bsec),
+            if bsec[0] == '[' and bsec[-1] == ']':
+                bsec = Particle([bsec.lstrip("[").rstrip("]")])
+
+            rules.append(Rule(_sec_to_particles(feature_pool, asec), bsec,
                               _sec_to_particles(feature_pool, csec), _sec_to_particles(feature_pool, dsec)))
     return rules
 

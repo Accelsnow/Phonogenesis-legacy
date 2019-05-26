@@ -23,25 +23,31 @@ class Sound:
     def get_symbol(self) -> str:
         return self._symbol
 
-    def get_transformed_sound(self, target_feature: str, type_to_features: Dict[str, List[str]],
-                              features_to_sound: Dict[Any, Sound]) -> Sound:
+    def get_transformed_sound(self, target_particle: Any, feature_to_type: Dict[str, str],
+                              feature_to_sounds: Dict[str, List[Sound]]) -> Sound:
         from feature_lib import Particle
 
-        for type_, features in type_to_features.items():
-            if target_feature in features:
-                for i in range(0, len(self._features)):
-                    if self._features[i] in type_to_features[type_]:
-                        target_feature_arr = [s for s in self._features]
-                        target_feature_arr[i] = target_feature
+        if not isinstance(target_particle, Particle):
+            raise AttributeError("target particle must be a Particle")
 
-                        if Particle(target_feature_arr) not in features_to_sound.keys():
-                            raise RuntimeError(
-                                "Post transformation features \'%s\'does not represent an existing sound" % str(
-                                    target_feature_arr))
+        types = [feature_to_type[f] for f in target_particle.get_features()]
 
-                        return features_to_sound[Particle(target_feature_arr)]
+        for sound in target_particle.get_matching_sounds(feature_to_sounds):
+            target_features = sound.get_features()
+            passed = True
 
-        raise AttributeError("Transformation failed. Target feature invalid.")
+            for i in range(0, len(self._features)):
+                target_feature = target_features[i]
+                this_feature = self._features[i]
+
+                if feature_to_type[target_feature] not in types and target_feature != this_feature:
+                    passed = False
+                    break
+
+            if passed:
+                return sound
+
+        raise AttributeError("Transformation failed. No matching sound found or invalid input")
 
     def __getitem__(self, item: str) -> Sound:
         return _SYMBOL[item]

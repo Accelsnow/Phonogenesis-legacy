@@ -13,8 +13,9 @@ if __name__ == '__main__':
     features = tup[0]  # type: List[str]
     sounds = tup[1]  # type: List[Sound]
     type_to_features = tup[2]  # type: Dict[str, List[str]]
-    feature_to_sounds = tup[3]  # type: Dict[str, List[Sound]]
-    features_to_sound = tup[4]  # type: Dict[Particle, Sound]
+    feature_to_type = tup[3]  # type: Dict[str, str]
+    feature_to_sounds = tup[4]  # type: Dict[str, List[Sound]]
+    features_to_sound = tup[5]  # type: Dict[Particle, Sound]
 
     print([str(s) for s in sounds])
 
@@ -26,5 +27,9 @@ if __name__ == '__main__':
 
     print([str(r) for r in rules])
 
+    print(sounds[0].get_transformed_sound(Particle(["voiced"]), feature_to_type, feature_to_sounds))
+
     # sample template gen
-    print(templates[0].generate_word_list(feature_to_sounds))
+    # print(templates[0].generate_word_list(feature_to_sounds))
+    #
+    print(rules[0].apply("aba", feature_to_type, feature_to_sounds))
