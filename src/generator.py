@@ -12,11 +12,12 @@ class Generator:
     _difficulty_to_num: Dict[int, Tuple[int, int, int]]
     _templates: List[Template]
     _rule: Rule
-    _matching: List[Template]
-    _confusing: List[Template]
-    _unrelated: List[Template]
+    _matching: List[str]
+    _confusing: List[str]
+    _unrelated: List[str]
 
-    def __init__(self, templates: List[Template], rule: Rule, difficulty: int) -> None:
+    def __init__(self, templates: List[Template], rule: Rule, difficulty: int,
+                 feature_to_sounds: Dict[str, List[Sound]]) -> None:
         self._templates = templates
         self._rule = rule
 
@@ -35,14 +36,13 @@ class Generator:
         }
 
         self._difficulty = difficulty
-        self._initialize_templates()
+        self._initialize_templates(feature_to_sounds)
 
-    def _initialize_templates(self) -> None:
-        info = self._rule.get_info()
-        a = info[0]
-        b = info[1]
-        c = info[2]
-        d = info[3]
+    def _initialize_templates(self, feature_to_sounds: Dict[str, List[Sound]]) -> None:
+        for template in self._templates:
+            word_list = template.generate_word_list(feature_to_sounds)
+
+
 
     def get_difficulty(self) -> int:
         return self._difficulty

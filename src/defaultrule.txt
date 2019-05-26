@@ -1,1 +1,1 @@
-[voiced]>[voiceless]/[syllabic]_[syllabic]
+[not spread]>[spread]/[syllabic]_[syllabic]

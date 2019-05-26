@@ -29,6 +29,21 @@ class Rule:
         return self._A, self._B, self._C, self._D
 
     def apply(self, word: str, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> str:
+        location = self.locate_position(word, feature_to_sounds)
+
+        if location is not None:
+            confirmed_location = self.confirm_position_validity(word, location[0], location[1], feature_to_sounds)
+
+            if confirmed_location is not None:
+                return self._do_replace(word, confirmed_location[0], confirmed_location[1], feature_to_type,
+                                        feature_to_sounds)
+            else:
+                return word
+
+        else:
+            return word
+
+    def locate_position(self, word: str, feature_to_sounds: Dict[str, List[Sound]]) -> Optional[Tuple[int, int], None]:
         c_index = None
         c_fixed = False
         c_matcher = None
@@ -62,7 +77,7 @@ class Rule:
             d_matcher = Template(self._D).generate_word_list(feature_to_sounds)
 
         if c_fixed and d_fixed:
-            return self._perform_transformation(word, c_index, d_index, feature_to_type, feature_to_sounds)
+            return c_index, d_index
         elif not c_fixed and d_fixed:
             c_size = len(c_matcher[0])
             for pattern in c_matcher:
@@ -71,7 +86,7 @@ class Rule:
                 except ValueError:
                     continue
 
-                return self._perform_transformation(word, c_loc, d_index, feature_to_type, feature_to_sounds)
+                return c_loc, d_index
 
         elif c_fixed and not d_fixed:
             for pattern in d_matcher:
@@ -80,7 +95,7 @@ class Rule:
                 except ValueError:
                     continue
 
-                return self._perform_transformation(word, c_index, d_loc, feature_to_type, feature_to_sounds)
+                return c_index, d_loc
         else:
             c_size = len(c_matcher[0])
             for c_pattern in c_matcher:
@@ -96,12 +111,12 @@ class Rule:
                         continue
 
                     if d_loc > c_loc:
-                        return self._perform_transformation(word, c_loc, d_loc, feature_to_type, feature_to_sounds)
+                        return c_loc, d_loc
 
-        return word
+        return None
 
-    def _perform_transformation(self, word: str, begin_index: Optional[int, None], end_index: Optional[int, None],
-                                feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> str:
+    def confirm_position_validity(self, word: str, begin_index: Optional[int, None], end_index: Optional[int, None],
+                                  feature_to_sounds: Dict[str, List[Sound]]) -> Optional[Tuple[int, int], None]:
         targets_a = Template(self._A).generate_word_list(feature_to_sounds)
         target_size = len(targets_a[0])
 
@@ -118,17 +133,26 @@ class Rule:
                     end_index = begin_index - target_size
                 except ValueError:
                     continue
+            else:
+                if word[begin_index:end_index] != target:
+                    continue
 
-            return self._do_replace(word, target, begin_index, end_index, feature_to_type, feature_to_sounds)
+            return begin_index, end_index
 
-    def _do_replace(self, word: str, target: str, begin_index: int, end_index: int, feature_to_type: Dict[str, str],
+        return None
+
+    def _do_replace(self, word: str, begin_index: int, end_index: int, feature_to_type: Dict[str, str],
                     feature_to_sounds: Dict[str, List[Sound]]) -> str:
-
+        target = word[begin_index:end_index]
         if isinstance(self._B, str):
             print("not implemented yet")
         else:
             dest_sound = Sound('', [])[target].get_transformed_sound(self._B, feature_to_type, feature_to_sounds)
-            return word[:begin_index] + str(dest_sound) + word[end_index:]
+
+            if dest_sound is not None:
+                return word[:begin_index] + str(dest_sound) + word[end_index:]
+            else:
+                return word
 
     def __str__(self) -> str:
         return "%s -> %s / %s _ %s" % (

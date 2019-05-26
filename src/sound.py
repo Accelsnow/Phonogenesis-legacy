@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+import warnings
 
 _SYMBOL = {}  # type: Dict[str, Sound]
 
@@ -24,7 +25,7 @@ class Sound:
         return self._symbol
 
     def get_transformed_sound(self, target_particle: Any, feature_to_type: Dict[str, str],
-                              feature_to_sounds: Dict[str, List[Sound]]) -> Sound:
+                              feature_to_sounds: Dict[str, List[Sound]]) -> Optional[Sound, None]:
         from feature_lib import Particle
 
         if not isinstance(target_particle, Particle):
@@ -47,7 +48,8 @@ class Sound:
             if passed:
                 return sound
 
-        raise AttributeError("Transformation failed. No matching sound found or invalid input")
+        warnings.warn("Transformation invalid. No matching sound found or invalid transformation")
+        return None
 
     def __getitem__(self, item: str) -> Sound:
         return _SYMBOL[item]
