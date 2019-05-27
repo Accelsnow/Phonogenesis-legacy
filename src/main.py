@@ -4,6 +4,7 @@ from feature_lib import Particle, import_default_features
 from sound import Sound
 from rules import Rule, import_default_rules
 from templates import Template, import_default_templates
+from generator import Generator
 
 from typing import List, Tuple, Dict, Any
 
@@ -27,9 +28,16 @@ if __name__ == '__main__':
 
     print([str(r) for r in rules])
 
-    print(sounds[0].get_transformed_sound(Particle(["voiced"]), feature_to_type, feature_to_sounds))
+    gen = Generator(templates, rules[0], 4, feature_to_type, feature_to_sounds)
+    result = gen.generate(feature_to_type, feature_to_sounds)
+    print("RESULTS")
+    for r in result:
+        print(r)
 
-    # sample template gen
-    # print(templates[0].generate_word_list(feature_to_sounds))
     #
-    print(rules[0].apply("aba", feature_to_type, feature_to_sounds))
+    # print(sounds[0].get_transformed_sound(Particle(["voiced"]), feature_to_type, feature_to_sounds))
+    #
+    # # sample template gen
+    # # print(templates[0].generate_word_list(feature_to_sounds))
+    # #
+    # print(rules[0].apply("aba", feature_to_type, feature_to_sounds))

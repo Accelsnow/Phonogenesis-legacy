@@ -1,2 +1,2 @@
 [syllabic]-[non syllabic]-[syllabic]
-[non syllabic]-[syllabic]-[non syllabic]-[syllabic]
+[non syllabic]-[syllabic]-[non syllabic]

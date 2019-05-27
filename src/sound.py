@@ -13,7 +13,7 @@ class Sound:
         self._features = features
         self._symbol = symbol
 
-        if symbol in _SYMBOL.keys():
+        if symbol in _SYMBOL.keys() and symbol != '':
             raise ValueError("Duplicated symbol not allowed!")
 
         _SYMBOL[symbol] = self
@@ -48,7 +48,7 @@ class Sound:
             if passed:
                 return sound
 
-        warnings.warn("Transformation invalid. No matching sound found or invalid transformation")
+        # warnings.warn("Transformation invalid. No matching sound found or invalid transformation")
         return None
 
     def __getitem__(self, item: str) -> Sound:
