@@ -32,7 +32,10 @@ if __name__ == '__main__':
     result = gen.generate(feature_to_type, feature_to_sounds)
     print("RESULTS")
     for r in result:
-        print(r)
+        if isinstance(r, list):
+            print([str(d) for d in r])
+        else:
+            print(r)
 
     #
     # print(sounds[0].get_transformed_sound(Particle(["voiced"]), feature_to_type, feature_to_sounds))

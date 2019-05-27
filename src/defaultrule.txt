@@ -1,1 +1,1 @@
-[not spread]>[spread]/[syllabic]_[syllabic]
+[tense]>[lax]/[fricative]_[fricative]
