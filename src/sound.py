@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import List, Dict, Any, Optional
-import warnings
 
 _SYMBOL = {}  # type: Dict[str, Sound]
 
@@ -48,7 +47,6 @@ class Sound:
             if passed:
                 return sound
 
-        # warnings.warn("Transformation invalid. No matching sound found or invalid transformation")
         return None
 
     def __getitem__(self, item: str) -> Sound:

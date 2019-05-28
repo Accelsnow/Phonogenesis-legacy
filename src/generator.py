@@ -56,8 +56,8 @@ class Generator:
                 if cd_loc is None:
                     if self._rule.confirm_position_validity(word, None, None, feature_to_sounds) is None:
                         self._unrelated.append(word)
-                    else:
-                        self._confusing.append(word)
+                    # else:
+                    #     self._confusing.append(word)
                 else:
                     if self._rule.confirm_position_validity(word, cd_loc[0], cd_loc[1], feature_to_sounds) is None:
                         self._confusing.append(word)
@@ -84,10 +84,6 @@ class Generator:
         num_confusing = difficulty_data[1]  # type: int
         num_unrelated = difficulty_data[2]  # type: int
 
-        print(self._matching)
-        print(self._confusing)
-        print(self._unrelated)
-
         if len(self._matching) >= num_matching:
             underlying_rep.extend(random.sample(self._matching, num_matching))
         else:
@@ -108,6 +104,8 @@ class Generator:
             warnings.warn("Insufficient amount of unrelated cases.(%d required, %d found)" % (
                 num_unrelated, len(self._unrelated)))
             underlying_rep.extend(self._unrelated)
+
+        # random.shuffle(underlying_rep)
 
         for word in underlying_rep:
             surface_rep.append(self._rule.apply(word, feature_to_type, feature_to_sounds))

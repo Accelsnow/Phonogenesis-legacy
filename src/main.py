@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     print([str(r) for r in rules])
 
-    gen = Generator(templates, rules[0], 4, feature_to_type, feature_to_sounds)
+    gen = Generator(templates, rules[0], 10, feature_to_type, feature_to_sounds)
     result = gen.generate(feature_to_type, feature_to_sounds)
     print("RESULTS")
     for r in result:
