@@ -32,7 +32,7 @@ class Sound:
 
         types = [feature_to_type[f] for f in target_particle.get_features()]
 
-        for sound in target_particle.get_matching_sounds(feature_to_sounds):
+        for sound in target_particle.get_matching_sounds(None, feature_to_sounds):
             target_features = sound.get_features()
             passed = True
 

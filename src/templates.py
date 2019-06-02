@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict
+from typing import List, Dict, Optional
 from sound import Sound
 from feature_lib import Particle
 
@@ -12,11 +12,12 @@ class Template:
         self._components = components
         self._size = len(components)
 
-    def generate_word_list(self, feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
+    def generate_word_list(self, phonemes: Optional[List[Sound], None], feature_to_sounds: Dict[str, List[Sound]]) -> \
+            List[str]:
         comb_sounds = []  # type: List[List[Sound]]
 
         for particle in self._components:
-            comb_sounds.append(particle.get_matching_sounds(feature_to_sounds))
+            comb_sounds.append(particle.get_matching_sounds(phonemes, feature_to_sounds))
 
         return self._recur_word(comb_sounds, 0, [''])
 
@@ -67,3 +68,22 @@ def _fetch_template_csv(filename: str, feature_pool: List[str]) -> List[Template
             templates.append(template)
 
     return templates
+
+
+def import_default_phonemes() -> List[Sound]:
+    return _fetch_phoneme('defaultphoneme.txt')
+
+
+def _fetch_phoneme(filename: str) -> List[Sound]:
+    phonemes = []
+
+    with open(filename, encoding='utf-8') as data_file:
+        lines = [l.rstrip('\n') for l in data_file.readlines()]
+
+        for line in lines:
+            data = line.split(" ")
+
+            for sound_str in data:
+                phonemes.append(Sound('', [])[sound_str])
+
+    return phonemes

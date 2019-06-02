@@ -2,24 +2,25 @@ from __future__ import annotations
 import csv
 from sound import Sound
 
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 
 class Particle:
     _features: List[str]
 
-    def get_matching_sounds(self, feature_to_sounds: Dict[str, List[Sound]]) -> List[Sound]:
+    def get_matching_sounds(self, phonemes: Optional[List[Sound], None], feature_to_sounds: Dict[str, List[Sound]]) -> \
+    List[Sound]:
         result = None
 
         for feature in self._features:
             curr_sounds = feature_to_sounds[feature]
 
-            if result is None:
-                result = [s for s in curr_sounds]
-            else:
-                for sound in result:
-                    if sound not in curr_sounds:
-                        result.remove(sound)
+            for sound in curr_sounds:
+                if phonemes is None or sound in phonemes:
+                    if result is None:
+                        result = [sound]
+                    elif sound not in result:
+                        result.append(sound)
 
         return result
 

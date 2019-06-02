@@ -1,1 +1,1 @@
-[tense]>[lax]/[fricative]_[fricative]
+[obstruent]>[voiceless]/_#

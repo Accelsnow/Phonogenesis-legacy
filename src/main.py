@@ -3,7 +3,7 @@ from __future__ import annotations
 from feature_lib import Particle, import_default_features
 from sound import Sound
 from rules import Rule, import_default_rules
-from templates import Template, import_default_templates
+from templates import Template, import_default_templates, import_default_phonemes
 from generator import Generator
 
 from typing import List, Tuple, Dict, Any
@@ -28,7 +28,11 @@ if __name__ == '__main__':
 
     print([str(r) for r in rules])
 
-    gen = Generator(templates, rules[0], 10, feature_to_type, feature_to_sounds)
+    phonemes = import_default_phonemes()
+
+    print([str(p) for p in phonemes])
+
+    gen = Generator(phonemes, templates, rules[0], 6, feature_to_type, feature_to_sounds)
     result = gen.generate(feature_to_type, feature_to_sounds)
     print("RESULTS")
     for r in result:

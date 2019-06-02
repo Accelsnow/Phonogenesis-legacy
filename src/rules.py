@@ -28,11 +28,13 @@ class Rule:
         List[Particle], Optional[Particle, str], Optional[List[Particle], str], Optional[List[Particle], str]]:
         return self._A, self._B, self._C, self._D
 
-    def apply(self, word: str, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> str:
-        location = self.locate_position(word, feature_to_sounds)
+    def apply(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
+              feature_to_sounds: Dict[str, List[Sound]]) -> str:
+        location = self.locate_position(word, phonemes, feature_to_sounds)
 
         if location is not None:
-            confirmed_location = self.confirm_position_validity(word, location[0], location[1], feature_to_sounds)
+            confirmed_location = self.confirm_position_validity(word, phonemes, location[0], location[1],
+                                                                feature_to_sounds)
 
             if confirmed_location is not None:
                 return self._do_replace(word, confirmed_location[0], confirmed_location[1], feature_to_type,
@@ -43,7 +45,8 @@ class Rule:
         else:
             return word
 
-    def locate_position(self, word: str, feature_to_sounds: Dict[str, List[Sound]]) -> Optional[Tuple[int, int], None]:
+    def locate_position(self, word: str, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> Optional[
+        Tuple[int, int], None]:
         c_index = None
         c_fixed = False
         c_matcher = None
@@ -58,7 +61,7 @@ class Rule:
 
             c_fixed = True
         else:
-            c_matcher = Template(self._C).generate_word_list(feature_to_sounds)
+            c_matcher = Template(self._C).generate_word_list(phonemes, feature_to_sounds)
 
         d_index = None
         d_fixed = False
@@ -74,7 +77,7 @@ class Rule:
 
             d_fixed = True
         else:
-            d_matcher = Template(self._D).generate_word_list(feature_to_sounds)
+            d_matcher = Template(self._D).generate_word_list(phonemes, feature_to_sounds)
 
         if c_fixed and d_fixed:
             return c_index, d_index
@@ -115,9 +118,10 @@ class Rule:
 
         return None
 
-    def confirm_position_validity(self, word: str, begin_index: Optional[int, None], end_index: Optional[int, None],
-                                  feature_to_sounds: Dict[str, List[Sound]]) -> Optional[Tuple[int, int], None]:
-        targets_a = Template(self._A).generate_word_list(feature_to_sounds)
+    def confirm_position_validity(self, word: str, phonemes: List[Sound], begin_index: Optional[int, None],
+                                  end_index: Optional[int, None], feature_to_sounds: Dict[str, List[Sound]]) -> \
+            Optional[Tuple[int, int], None]:
+        targets_a = Template(self._A).generate_word_list(phonemes, feature_to_sounds)
         target_size = len(targets_a[0])
 
         if begin_index is not None and end_index is None:

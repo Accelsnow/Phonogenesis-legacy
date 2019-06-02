@@ -16,14 +16,16 @@ class Generator:
     _matching: List[str]
     _confusing: List[str]
     _unrelated: List[str]
+    _phonemes: List[Sound]
 
-    def __init__(self, templates: List[Template], rule: Rule, difficulty: int,
+    def __init__(self, phonemes: List[Sound], templates: List[Template], rule: Rule, difficulty: int,
                  feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> None:
         self._templates = templates
         self._rule = rule
         self._matching = []
         self._confusing = []
         self._unrelated = []
+        self._phonemes = phonemes
 
         self._difficulty_to_num = {
             0: (4, 0, 0),
@@ -42,24 +44,27 @@ class Generator:
         self._difficulty = difficulty
         self._initialize_templates(feature_to_type, feature_to_sounds)
 
-    def _initialize_templates(self, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> None:
+    def _initialize_templates(self, feature_to_type: Dict[str, str],
+                              feature_to_sounds: Dict[str, List[Sound]]) -> None:
         for template in self._templates:
-            word_list = template.generate_word_list(feature_to_sounds)
+            word_list = template.generate_word_list(self._phonemes, feature_to_sounds)
 
             for word in word_list:
-                if self._rule.apply(word, feature_to_type, feature_to_sounds) != word:
+                if self._rule.apply(word, self._phonemes, feature_to_type, feature_to_sounds) != word:
                     self._matching.append(word)
                     continue
 
-                cd_loc = self._rule.locate_position(word, feature_to_sounds)
+                cd_loc = self._rule.locate_position(word, self._phonemes, feature_to_sounds)
 
                 if cd_loc is None:
-                    if self._rule.confirm_position_validity(word, None, None, feature_to_sounds) is None:
+                    if self._rule.confirm_position_validity(word, self._phonemes, None, None,
+                                                            feature_to_sounds) is None:
                         self._unrelated.append(word)
                     # else:
                     #     self._confusing.append(word)
                 else:
-                    if self._rule.confirm_position_validity(word, cd_loc[0], cd_loc[1], feature_to_sounds) is None:
+                    if self._rule.confirm_position_validity(word, self._phonemes, cd_loc[0], cd_loc[1],
+                                                            feature_to_sounds) is None:
                         self._confusing.append(word)
 
     def get_difficulty(self) -> int:
@@ -108,6 +113,6 @@ class Generator:
         # random.shuffle(underlying_rep)
 
         for word in underlying_rep:
-            surface_rep.append(self._rule.apply(word, feature_to_type, feature_to_sounds))
+            surface_rep.append(self._rule.apply(word, self._phonemes, feature_to_type, feature_to_sounds))
 
         return surface_rep, underlying_rep, self._rule, self._templates
