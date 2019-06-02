@@ -54,7 +54,7 @@ class Generator:
                     self._matching.append(word)
                     continue
 
-                cd_loc = self._rule.locate_position(word, self._phonemes, feature_to_sounds)
+                cd_loc = self._rule.locate_cd(word, self._phonemes, feature_to_sounds)
 
                 if cd_loc is None:
                     if self._rule.confirm_position_validity(word, self._phonemes, None, None,

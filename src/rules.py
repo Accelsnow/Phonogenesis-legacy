@@ -3,21 +3,36 @@ from typing import List, Optional, Dict, Tuple
 from feature_lib import Particle
 from templates import Template
 from sound import Sound
+from enum import Enum
 
 EDGE_SYMBOL = '#'
 NULL_SYMBOL = ''
+
+
+class ExampleType(Enum):
+    CAD = 1,
+    CAND = 2,
+    NCAD = 3,
+    NCAND = 4,
+    CBND = 5,
+    NCBD = 6,
+    NCBND = 7,
+    IRR = 8
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Rule:
     """
     A>B/C_D
     """
-    _A: List[Particle]
+    _A: Optional[List[Particle], str]
     _B: Optional[Particle, str]
     _C: Optional[List[Particle], str]
     _D: Optional[List[Particle], str]
 
-    def __init__(self, a: List[Particle], b: Optional[Particle, str], c: List[Particle],
+    def __init__(self, a: Optional[List[Particle], str], b: Optional[Particle, str], c: List[Particle],
                  d: List[Particle]) -> None:
         self._A = a
         self._B = b
@@ -30,7 +45,7 @@ class Rule:
 
     def apply(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
               feature_to_sounds: Dict[str, List[Sound]]) -> str:
-        location = self.locate_position(word, phonemes, feature_to_sounds)
+        location = self.locate_cd(word, phonemes, feature_to_sounds)
 
         if location is not None:
             confirmed_location = self.confirm_position_validity(word, phonemes, location[0], location[1],
@@ -45,7 +60,93 @@ class Rule:
         else:
             return word
 
-    def locate_position(self, word: str, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> Optional[
+    def classify(self, word: str, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]):
+        a_data = self.locations_a(word, phonemes, feature_to_sounds)
+        a_locations = a_data[0]
+        a_size = a_data[1]
+
+        if len(a_locations) == 0 or a_locations == []:
+            return [ExampleType.IRR]
+        else:
+            types = []
+
+            for a_loc in a_locations:
+                is_c = False
+
+                if isinstance(self._C, str):
+                    if self._C == NULL_SYMBOL:
+                        is_c = True
+                    elif self._C == EDGE_SYMBOL:
+                        if a_loc == 0:
+                            is_c = True
+                    else:
+                        raise AttributeError("unknown string for C: %s" % self._C)
+                else:
+                    c_matcher = Template(self._C).generate_word_list(phonemes, feature_to_sounds)
+                    c_size = len(c_matcher[0])
+
+                    for pattern in c_matcher:
+                        if a_loc - c_size >= 0 and word[a_loc - c_size:a_loc] == pattern:
+                            is_c = True
+                            break
+
+                is_d = False
+
+                if isinstance(self._D, str):
+                    if self._D == NULL_SYMBOL:
+                        is_d = True
+                    elif self._D == EDGE_SYMBOL:
+                        if a_loc == 0:
+                            is_d = True
+                    else:
+                        raise AttributeError("unknown string for D: %s" % self._D)
+
+                else:
+                    d_matcher = Template(self._D).generate_word_list(phonemes, feature_to_sounds)
+                    d_size = len(d_matcher[0])
+
+                    for pattern in d_matcher:
+                        if a_loc + a_size + d_size < len(word) and \
+                                word[a_loc + a_size:a_loc + a_size + d_size] == pattern:
+                            is_d = True
+                            break
+
+                if is_c and is_d and ExampleType.CAD not in types:
+                    types.append(ExampleType.CAD)
+                elif is_c and not is_d and ExampleType.CAND not in types:
+                    types.append(ExampleType.CAND)
+                elif not is_c and is_d and ExampleType.NCAD not in types:
+                    types.append(ExampleType.NCAD)
+                elif not is_c and not is_d and ExampleType.NCAND not in types:
+                    types.append(ExampleType.NCAND)
+
+            return types
+
+    def locations_a(self, word: str, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> Tuple[
+        List[int], int]:
+        if isinstance(self._A, str):
+            if self._A == NULL_SYMBOL:
+                return [i for i in range(0, len(word))], 0
+            else:
+                raise AttributeError('A can only be Null or List of particles')
+
+        a_matcher = Template(self._A).generate_word_list(phonemes, feature_to_sounds)
+        prev_index = 0
+        locations = []
+        size = len(a_matcher[0])
+
+        for pattern in a_matcher:
+            try:
+                a_index = word.index(pattern, prev_index)
+
+                prev_index = a_index
+                locations.append(a_index)
+            except ValueError:
+                continue
+
+        return locations, size
+
+    def locate_cd(self, word: str, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> Optional[
         Tuple[int, int], None]:
         c_index = None
         c_fixed = False
