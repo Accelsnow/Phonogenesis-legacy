@@ -32,18 +32,22 @@ if __name__ == '__main__':
 
     print([str(p) for p in phonemes])
 
-    while True:
-        user = input("\nWord to check: ")
-        print(rules[0].classify(user, phonemes, feature_to_sounds))
+    print(templates[1].generate_word_list(phonemes, feature_to_sounds))
 
-    # gen = Generator(phonemes, templates, rules[0], 6, feature_to_type, feature_to_sounds)
-    # result = gen.generate(feature_to_type, feature_to_sounds)
+    while True:
+        # word = input("\nWord to check: ")
+        print(rules[1].classify("hah", phonemes, feature_to_type, feature_to_sounds))
+    #
+    # gen = Generator(phonemes, templates, rules[1], 5, feature_to_type, feature_to_sounds)
+    # result = gen.generate(20, feature_to_type, feature_to_sounds)
     # print("RESULTS")
     # for r in result:
     #     if isinstance(r, list):
     #         print([str(d) for d in r])
     #     else:
     #         print(r)
+    #
+    # print([str(s) for s in rules[1]._A[0].get_matching_sounds(phonemes, feature_to_sounds)])
 
     #
     # print(sounds[0].get_transformed_sound(Particle(["voiced"]), feature_to_type, feature_to_sounds))

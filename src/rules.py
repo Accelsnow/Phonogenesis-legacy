@@ -10,14 +10,12 @@ NULL_SYMBOL = ''
 
 
 class ExampleType(Enum):
-    CAD = 1,
+    CADT = 0,
+    CADNT = 1,
     CAND = 2,
     NCAD = 3,
     NCAND = 4,
-    CBND = 5,
-    NCBD = 6,
-    NCBND = 7,
-    IRR = 8
+    IRR = 5
 
     def __str__(self) -> str:
         return self.name
@@ -31,6 +29,7 @@ class Rule:
     _B: Optional[Particle, str]
     _C: Optional[List[Particle], str]
     _D: Optional[List[Particle], str]
+    _CADT_lib: Dict[str, Tuple[int, int]]
 
     def __init__(self, a: Optional[List[Particle], str], b: Optional[Particle, str], c: List[Particle],
                  d: List[Particle]) -> None:
@@ -38,6 +37,7 @@ class Rule:
         self._B = b
         self._C = c
         self._D = d
+        self._CADT_lib = {}
 
     def get_info(self) -> Tuple[
         List[Particle], Optional[Particle, str], Optional[List[Particle], str], Optional[List[Particle], str]]:
@@ -45,22 +45,15 @@ class Rule:
 
     def apply(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
               feature_to_sounds: Dict[str, List[Sound]]) -> str:
-        location = self.locate_cd(word, phonemes, feature_to_sounds)
-
-        if location is not None:
-            confirmed_location = self.confirm_position_validity(word, phonemes, location[0], location[1],
-                                                                feature_to_sounds)
-
-            if confirmed_location is not None:
-                return self._do_replace(word, confirmed_location[0], confirmed_location[1], feature_to_type,
-                                        feature_to_sounds)
-            else:
+        if word not in self._CADT_lib.keys():
+            if self.classify(word, phonemes, feature_to_type, feature_to_sounds) != ExampleType.CADT:
                 return word
 
-        else:
-            return word
+        index = self._CADT_lib[word]
+        return self._do_replace(word, index[0], index[1], feature_to_type, feature_to_sounds)
 
-    def classify(self, word: str, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]):
+    def classify(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
+                 feature_to_sounds: Dict[str, List[Sound]]):
         a_data = self.locations_a(word, phonemes, feature_to_sounds)
         a_locations = a_data[0]
         a_size = a_data[1]
@@ -85,8 +78,8 @@ class Rule:
                     c_matcher = Template(self._C).generate_word_list(phonemes, feature_to_sounds)
                     c_size = len(c_matcher[0])
 
-                    for pattern in c_matcher:
-                        if a_loc - c_size >= 0 and word[a_loc - c_size:a_loc] == pattern:
+                    for c_pattern in c_matcher:
+                        if a_loc - c_size >= 0 and word[a_loc - c_size:a_loc] == c_pattern:
                             is_c = True
                             break
 
@@ -96,7 +89,7 @@ class Rule:
                     if self._D == NULL_SYMBOL:
                         is_d = True
                     elif self._D == EDGE_SYMBOL:
-                        if a_loc == 0:
+                        if a_loc == len(word) - 1:
                             is_d = True
                     else:
                         raise AttributeError("unknown string for D: %s" % self._D)
@@ -105,14 +98,18 @@ class Rule:
                     d_matcher = Template(self._D).generate_word_list(phonemes, feature_to_sounds)
                     d_size = len(d_matcher[0])
 
-                    for pattern in d_matcher:
-                        if a_loc + a_size + d_size < len(word) and \
-                                word[a_loc + a_size:a_loc + a_size + d_size] == pattern:
+                    for d_pattern in d_matcher:
+                        if a_loc + a_size + d_size <= len(word) and \
+                                word[a_loc + a_size:a_loc + a_size + d_size] == d_pattern:
                             is_d = True
                             break
 
-                if is_c and is_d and ExampleType.CAD not in types:
-                    types.append(ExampleType.CAD)
+                if is_c and is_d:
+                    if word == self._do_replace(word, a_loc, a_loc + a_size, feature_to_type, feature_to_sounds):
+                        types.append(ExampleType.CADNT)
+                    else:
+                        types.append(ExampleType.CADT)
+                        self._CADT_lib[word] = a_loc, a_loc + a_size
                 elif is_c and not is_d and ExampleType.CAND not in types:
                     types.append(ExampleType.CAND)
                 elif not is_c and is_d and ExampleType.NCAD not in types:
@@ -146,111 +143,11 @@ class Rule:
 
         return locations, size
 
-    def locate_cd(self, word: str, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> Optional[
-        Tuple[int, int], None]:
-        c_index = None
-        c_fixed = False
-        c_matcher = None
-
-        if isinstance(self._C, str):
-            if self._C == NULL_SYMBOL:
-                c_index = None
-            elif self._C == EDGE_SYMBOL:
-                c_index = 0
-            else:
-                raise AttributeError("unknown string for C: %s" % self._C)
-
-            c_fixed = True
-        else:
-            c_matcher = Template(self._C).generate_word_list(phonemes, feature_to_sounds)
-
-        d_index = None
-        d_fixed = False
-        d_matcher = None
-
-        if isinstance(self._D, str):
-            if self._D == NULL_SYMBOL:
-                d_index = None
-            elif self._D == EDGE_SYMBOL:
-                d_index = len(word)
-            else:
-                raise AttributeError("unknown string for D: %s" % self._D)
-
-            d_fixed = True
-        else:
-            d_matcher = Template(self._D).generate_word_list(phonemes, feature_to_sounds)
-
-        if c_fixed and d_fixed:
-            return c_index, d_index
-        elif not c_fixed and d_fixed:
-            c_size = len(c_matcher[0])
-            for pattern in c_matcher:
-                try:
-                    c_loc = word.index(pattern) + c_size
-                except ValueError:
-                    continue
-
-                return c_loc, d_index
-
-        elif c_fixed and not d_fixed:
-            for pattern in d_matcher:
-                try:
-                    d_loc = word.index(pattern)
-                except ValueError:
-                    continue
-
-                return c_index, d_loc
-        else:
-            c_size = len(c_matcher[0])
-            for c_pattern in c_matcher:
-                try:
-                    c_loc = word.index(c_pattern) + c_size
-                except ValueError:
-                    continue
-
-                for d_pattern in d_matcher:
-                    try:
-                        d_loc = word.index(d_pattern, c_loc + 1)
-                    except ValueError:
-                        continue
-
-                    if d_loc > c_loc:
-                        return c_loc, d_loc
-
-        return None
-
-    def confirm_position_validity(self, word: str, phonemes: List[Sound], begin_index: Optional[int, None],
-                                  end_index: Optional[int, None], feature_to_sounds: Dict[str, List[Sound]]) -> \
-            Optional[Tuple[int, int], None]:
-        targets_a = Template(self._A).generate_word_list(phonemes, feature_to_sounds)
-        target_size = len(targets_a[0])
-
-        if begin_index is not None and end_index is None:
-            end_index = begin_index + target_size
-        elif begin_index is None and end_index is not None:
-            begin_index = end_index - target_size
-
-        for target in targets_a:
-
-            if begin_index is None and end_index is None:
-                try:
-                    begin_index = word.index(target)
-                    end_index = begin_index - target_size
-                except ValueError:
-                    continue
-            else:
-                if word[begin_index:end_index] != target:
-                    continue
-
-            return begin_index, end_index
-
-        return None
-
     def _do_replace(self, word: str, begin_index: int, end_index: int, feature_to_type: Dict[str, str],
                     feature_to_sounds: Dict[str, List[Sound]]) -> str:
         target = word[begin_index:end_index]
         if isinstance(self._B, str):
-            print("not implemented yet")
+            raise NotImplementedError
         else:
             dest_sound = Sound('', [])[target].get_transformed_sound(self._B, feature_to_type, feature_to_sounds)
 

@@ -1,1 +1,3 @@
 [obstruent]>[voiceless]/_#
+[not spread,fricative]>[voiced]/[syllabic]_[syllabic]
+[velar,oral stop]>[postalveolar,affricate]/_[front,syllabic]

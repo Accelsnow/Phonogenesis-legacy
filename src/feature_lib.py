@@ -10,17 +10,28 @@ class Particle:
 
     def get_matching_sounds(self, phonemes: Optional[List[Sound], None], feature_to_sounds: Dict[str, List[Sound]]) -> \
     List[Sound]:
-        result = None
+        intersection = None
+        prev_list = None
 
         for feature in self._features:
             curr_sounds = feature_to_sounds[feature]
 
-            for sound in curr_sounds:
-                if phonemes is None or sound in phonemes:
-                    if result is None:
-                        result = [sound]
-                    elif sound not in result:
-                        result.append(sound)
+            if prev_list is None:
+                prev_list = curr_sounds
+            else:
+                intersection = list(set(curr_sounds).intersection(prev_list))
+
+        if intersection is None:
+            intersection = prev_list
+
+        if phonemes is None:
+            return intersection
+
+        result = []
+
+        for sound in intersection:
+            if sound in phonemes:
+                result.append(sound)
 
         return result
 

@@ -3,69 +3,62 @@ from typing import List, Tuple, Dict
 
 from sound import Sound
 from templates import Template
-from rules import Rule
+from rules import Rule, ExampleType
 import random
 import warnings
 
 
 class Generator:
     _difficulty: int  # 0- 10
-    _difficulty_to_num: Dict[int, Tuple[int, int, int]]
+    _difficulty_to_percent: Dict[int, Tuple[float, float, float, float, float, float]]
     _templates: List[Template]
     _rule: Rule
-    _matching: List[str]
-    _confusing: List[str]
-    _unrelated: List[str]
+    _CADT: List[str]
+    _CADNT: List[str]
+    _CAND: List[str]
+    _NCAD: List[str]
+    _NCAND: List[str]
+    _IRR: List[str]
     _phonemes: List[Sound]
 
     def __init__(self, phonemes: List[Sound], templates: List[Template], rule: Rule, difficulty: int,
                  feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> None:
         self._templates = templates
         self._rule = rule
-        self._matching = []
-        self._confusing = []
-        self._unrelated = []
+        self._CADT = []
+        self._CADNT = []
+        self._CAND = []
+        self._NCAD = []
+        self._NCAND = []
+        self._IRR = []
         self._phonemes = phonemes
 
-        self._difficulty_to_num = {
-            0: (4, 0, 0),
-            1: (4, 1, 0),
-            2: (4, 2, 0),
-            3: (4, 3, 0),
-            4: (4, 4, 0),
-            5: (4, 4, 1),
-            6: (4, 4, 2),
-            7: (4, 4, 3),
-            8: (4, 4, 4),
-            9: (4, 4, 5),
-            10: (4, 4, 6)
+        self._difficulty_to_percent = {
+            5: (0.32, 0.08, 0.175, 0.175, 0.05, 0.2)
         }
 
         self._difficulty = difficulty
         self._initialize_templates(feature_to_type, feature_to_sounds)
 
-    def _initialize_templates(self, feature_to_type: Dict[str, str],
-                              feature_to_sounds: Dict[str, List[Sound]]) -> None:
+    def _initialize_templates(self, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> None:
         for template in self._templates:
             word_list = template.generate_word_list(self._phonemes, feature_to_sounds)
 
             for word in word_list:
-                if self._rule.apply(word, self._phonemes, feature_to_type, feature_to_sounds) != word:
-                    self._matching.append(word)
-                    continue
+                example_type = self._rule.classify(word, self._phonemes, feature_to_type, feature_to_sounds)
 
-                cd_loc = self._rule.locate_cd(word, self._phonemes, feature_to_sounds)
-
-                if cd_loc is None:
-                    if self._rule.confirm_position_validity(word, self._phonemes, None, None,
-                                                            feature_to_sounds) is None:
-                        self._unrelated.append(word)
-                    # else:
-                    #     self._confusing.append(word)
-                else:
-                    if self._rule.confirm_position_validity(word, self._phonemes, cd_loc[0], cd_loc[1],
-                                                            feature_to_sounds) is None:
-                        self._confusing.append(word)
+                if ExampleType.CADT in example_type:
+                    self._CADT.append(word)
+                if ExampleType.CADNT in example_type:
+                    self._CADNT.append(word)
+                if ExampleType.CAND in example_type:
+                    self._CAND.append(word)
+                if ExampleType.NCAD in example_type:
+                    self._NCAD.append(word)
+                if ExampleType.NCAND in example_type:
+                    self._NCAND.append(word)
+                if ExampleType.IRR in example_type:
+                    self._IRR.append(word)
 
     def get_difficulty(self) -> int:
         return self._difficulty
@@ -79,36 +72,63 @@ class Generator:
     def change_difficulty(self, target_difficulty: int) -> None:
         self._difficulty = target_difficulty
 
-    def generate(self, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> Tuple[
-        List[str], List[str], Rule, List[Template]]:
+    def _get_num(self, amount: int) -> Tuple[int, int, int, int, int, int]:
+        diff_data = self._difficulty_to_percent[self._difficulty]
+        cadt = round(amount * diff_data[0])
+        cadnt = round(amount * diff_data[1])
+        cand = round(amount * diff_data[2])
+        ncad = round(amount * diff_data[3])
+        ncand = round(amount * diff_data[4])
+        irr = round(amount * diff_data[5])
+
+        if cadt + cadnt + cand + ncad + ncand + irr > amount:
+            irr -= 1
+
+        print(cadt, cadnt, cand, ncad, ncand, irr)
+        return cadt, cadnt, cand, ncad, ncand, irr
+
+    def generate(self, amount: int, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> \
+            Tuple[List[str], List[str], Rule, List[Template]]:
         underlying_rep = []  # type: List[str]
         surface_rep = []  # type: List[str]
 
-        difficulty_data = self._difficulty_to_num[self._difficulty]
-        num_matching = difficulty_data[0]  # type: int
-        num_confusing = difficulty_data[1]  # type: int
-        num_unrelated = difficulty_data[2]  # type: int
+        num_cadt, num_cadnt, num_cand, num_ncad, num_ncand, num_irr = self._get_num(amount)
 
-        if len(self._matching) >= num_matching:
-            underlying_rep.extend(random.sample(self._matching, num_matching))
+        if len(self._CADT) >= num_cadt:
+            underlying_rep.extend(random.sample(self._CADT, num_cadt))
         else:
-            warnings.warn(
-                "Insufficient amount of matching cases.(%d required, %d found)" % (num_matching, len(self._matching)))
-            underlying_rep.extend(self._matching)
+            warnings.warn("Insufficient amount of CADT type.(%d required, %d found)" % (num_cadt, len(self._CADT)))
+            underlying_rep.extend(self._CADT)
 
-        if len(self._confusing) >= num_confusing:
-            underlying_rep.extend(random.sample(self._confusing, num_confusing))
+        if len(self._CADNT) >= num_cadnt:
+            underlying_rep.extend(random.sample(self._CADNT, num_cadnt))
         else:
-            warnings.warn("Insufficient amount of confusing cases.(%d required, %d found)" % (
-                num_confusing, len(self._confusing)))
-            underlying_rep.extend(self._confusing)
+            warnings.warn("Insufficient amount of CADNT type.(%d required, %d found)" % (num_cadnt, len(self._CADNT)))
+            underlying_rep.extend(self._CADNT)
 
-        if len(self._unrelated) >= num_unrelated:
-            underlying_rep.extend(random.sample(self._unrelated, num_unrelated))
+        if len(self._CAND) >= num_cand:
+            underlying_rep.extend(random.sample(self._CAND, num_cand))
         else:
-            warnings.warn("Insufficient amount of unrelated cases.(%d required, %d found)" % (
-                num_unrelated, len(self._unrelated)))
-            underlying_rep.extend(self._unrelated)
+            warnings.warn("Insufficient amount of CAND cases.(%d required, %d found)" % (num_cand, len(self._CAND)))
+            underlying_rep.extend(self._CAND)
+
+        if len(self._NCAD) >= num_ncad:
+            underlying_rep.extend(random.sample(self._NCAD, num_ncad))
+        else:
+            warnings.warn("Insufficient amount of NCAD cases.(%d required, %d found)" % (num_ncad, len(self._NCAD)))
+            underlying_rep.extend(self._NCAD)
+
+        if len(self._NCAND) >= num_ncand:
+            underlying_rep.extend(random.sample(self._NCAND, num_ncand))
+        else:
+            warnings.warn("Insufficient amount of NCAND cases.(%d required, %d found)" % (num_ncand, len(self._NCAND)))
+            underlying_rep.extend(self._NCAND)
+
+        if len(self._IRR) >= num_irr:
+            underlying_rep.extend(random.sample(self._IRR, num_irr))
+        else:
+            warnings.warn("Insufficient amount of IRR cases.(%d required, %d found)" % (num_irr, len(self._IRR)))
+            underlying_rep.extend(self._IRR)
 
         # random.shuffle(underlying_rep)
 
