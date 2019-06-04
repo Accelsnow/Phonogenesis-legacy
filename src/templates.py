@@ -12,14 +12,23 @@ class Template:
         self._components = components
         self._size = len(components)
 
-    def generate_word_list(self, phonemes: Optional[List[Sound], None], feature_to_sounds: Dict[str, List[Sound]]) -> \
-            List[str]:
+    def generate_word_list(self, phonemes: Optional[List[Sound], None], size_limit: Optional[int, None],
+                           feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
         comb_sounds = []  # type: List[List[Sound]]
+        curr_size = 0  # type: int
 
         for particle in self._components:
             comb_sounds.append(particle.get_matching_sounds(phonemes, feature_to_sounds))
 
         return self._recur_word(comb_sounds, 0, [''])
+
+    def get_word_list_size(self, phonemes: Optional[List[Sound], None],
+                           feature_to_sounds: Dict[str, List[Sound]]) -> int:
+        size = 1
+        for particle in self._components:
+            size *= len(particle.get_matching_sounds(phonemes, feature_to_sounds))
+
+        return size
 
     def _recur_word(self, comb_sound: List[List[Sound]], index: int, words: List[str]) -> List[str]:
         if index >= len(comb_sound):

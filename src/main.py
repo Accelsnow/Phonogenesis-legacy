@@ -18,34 +18,34 @@ if __name__ == '__main__':
     feature_to_sounds = tup[4]  # type: Dict[str, List[Sound]]
     features_to_sound = tup[5]  # type: Dict[Particle, Sound]
 
-    print([str(s) for s in sounds])
-
     templates = import_default_templates(features)  # type: List[Template]
 
-    print([str(t) for t in templates])
+    print("full templates: ")
+    for template in templates:
+        print(template)
 
     rules = import_default_rules(features)  # type: List[Rule]
 
-    print([str(r) for r in rules])
+    print("\nfull rules: ")
+    for rule in rules:
+        print(rule)
 
     phonemes = import_default_phonemes()
 
-    print([str(p) for p in phonemes])
+    print("\nfull phonemes: ", [str(p) for p in phonemes])
 
     # while True:
     # word = input("\nWord to check: ")
     # print(rules[1].classify("susu", phonemes, feature_to_type, feature_to_sounds))
 
-    gen = Generator(phonemes, templates, rules[2], 5, feature_to_type, feature_to_sounds)
+    gen = Generator(phonemes, templates, rules[1], 5, feature_to_type, feature_to_sounds)
     result = gen.generate(20, feature_to_type, feature_to_sounds)
-    print("RESULTS")
-    for r in result:
-        if isinstance(r, list):
-            print([str(d) for d in r])
-        else:
-            print(r)
+    print("=====RESULTS=====")
+    print("SR: ", [str(s) for s in result[0]])
+    print("UR: ", [str(s) for s in result[1]])
+    print("RULE: ", result[2])
+    print("TEMPLATES: ", [str(s) for s in result[3]])
 
-    print([str(s) for s in rules[1]._A[0].get_matching_sounds(phonemes, feature_to_sounds)])
 
     #
     # print(sounds[0].get_transformed_sound(Particle(["voiced"]), feature_to_type, feature_to_sounds))
