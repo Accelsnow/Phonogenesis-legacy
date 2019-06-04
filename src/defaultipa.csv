@@ -54,8 +54,8 @@ ṉ̥,non syllabic,coronal,NA,NA,postalveolar,NA,posterior,laminal,NA,NA,NA,nasa
 ,,,,,,,,,,,,,,,,,,,,,,,END
 t͡s,non syllabic,coronal,NA,NA,alveolar,NA,anterior,apical,NA,NA,NA,affricate,voiceless,obstruent,contoid,occlusive,not lateral,oral,strident,not spread,not constricted,,END
 d͡z,non syllabic,coronal,NA,NA,alveolar,NA,anterior,apical,NA,NA,NA,affricate,voiced,obstruent,contoid,occlusive,not lateral,oral,strident,not spread,not constricted,,END
-t͡ʃ,non syllabic,coronal,NA,NA,alveolar,NA,posterior,laminal,NA,NA,NA,affricate,voiceless,obstruent,contoid,occlusive,not lateral,oral,strident,not spread,not constricted,,END
-d͡ʒ,non syllabic,coronal,NA,NA,alveolar,NA,posterior,laminal,NA,NA,NA,affricate,voiced,obstruent,contoid,occlusive,not lateral,oral,strident,not spread,not constricted,,END
+t͡ʃ,non syllabic,coronal,NA,NA,postalveolar,NA,posterior,laminal,NA,NA,NA,affricate,voiceless,obstruent,contoid,occlusive,not lateral,oral,strident,not spread,not constricted,,END
+d͡ʒ,non syllabic,coronal,NA,NA,postalveolar,NA,posterior,laminal,NA,NA,NA,affricate,voiced,obstruent,contoid,occlusive,not lateral,oral,strident,not spread,not constricted,,END
 t͡ʂ,non syllabic,coronal,NA,NA,retroflex,NA,posterior,apical,NA,NA,NA,affricate,voiceless,obstruent,contoid,occlusive,not lateral,oral,strident,not spread,not constricted,,END
 d͡ʐ,non syllabic,coronal,NA,NA,retroflex,NA,posterior,apical,NA,NA,NA,affricate,voiced,obstruent,contoid,occlusive,not lateral,oral,strident,not spread,not constricted,,END
 ,,,,,,,,,,,,,,,,,,,,,,,END

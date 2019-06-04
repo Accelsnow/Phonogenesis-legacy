@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Dict, Tuple, Set
 from feature_lib import Particle
 from templates import Template
 from sound import Sound
@@ -53,15 +53,15 @@ class Rule:
         return self._do_replace(word, index[0], index[1], feature_to_type, feature_to_sounds)
 
     def classify(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
-                 feature_to_sounds: Dict[str, List[Sound]]):
+                 feature_to_sounds: Dict[str, List[Sound]]) -> Set[ExampleType]:
         a_data = self.locations_a(word, phonemes, feature_to_sounds)
         a_locations = a_data[0]
         a_size = a_data[1]
 
         if len(a_locations) == 0 or a_locations == []:
-            return [ExampleType.IRR]
+            return {ExampleType.IRR}
         else:
-            types = []
+            types = set([])  # type: set
 
             for a_loc in a_locations:
                 is_c = False
@@ -106,16 +106,17 @@ class Rule:
 
                 if is_c and is_d:
                     if word == self._do_replace(word, a_loc, a_loc + a_size, feature_to_type, feature_to_sounds):
-                        types.append(ExampleType.CADNT)
+                        types = {ExampleType.CADNT}
                     else:
-                        types.append(ExampleType.CADT)
+                        types = {ExampleType.CADT}
                         self._CADT_lib[word] = a_loc, a_loc + a_size
-                elif is_c and not is_d and ExampleType.CAND not in types:
-                    types.append(ExampleType.CAND)
-                elif not is_c and is_d and ExampleType.NCAD not in types:
-                    types.append(ExampleType.NCAD)
-                elif not is_c and not is_d and ExampleType.NCAND not in types:
-                    types.append(ExampleType.NCAND)
+                elif ExampleType.CADT not in types and ExampleType.CADNT not in types:
+                    if is_c and not is_d:
+                        types.add(ExampleType.CAND)
+                    elif not is_c and is_d:
+                        types.add(ExampleType.NCAD)
+                    elif not is_c and not is_d:
+                        types.add(ExampleType.NCAND)
 
             return types
 
@@ -131,14 +132,19 @@ class Rule:
         prev_index = 0
         locations = []
         size = len(a_matcher[0])
+        i = 0
 
-        for pattern in a_matcher:
+        while i < len(a_matcher):
+            a_pattern = a_matcher[i]
+
             try:
-                a_index = word.index(pattern, prev_index)
+                a_index = word.index(a_pattern, prev_index)
 
-                prev_index = a_index
+                prev_index = a_index + 1
                 locations.append(a_index)
+                i -= 1
             except ValueError:
+                i += 1
                 continue
 
         return locations, size
@@ -190,7 +196,7 @@ def _fetch_rule_csv(feature_pool: List[str], filename: str) -> List[Rule]:
             dsec = condition_break[1]
 
             if bsec[0] == '[' and bsec[-1] == ']':
-                bsec = Particle([bsec.lstrip("[").rstrip("]")])
+                bsec = Particle(bsec.lstrip("[").rstrip("]").split(","))
 
             rules.append(Rule(_sec_to_particles(feature_pool, asec), bsec,
                               _sec_to_particles(feature_pool, csec), _sec_to_particles(feature_pool, dsec)))
