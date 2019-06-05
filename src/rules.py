@@ -46,30 +46,17 @@ class Rule:
     def apply(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
               feature_to_sounds: Dict[str, List[Sound]]) -> str:
         if word not in self._CADT_lib.keys():
-            if ExampleType.CADT not in self.classify(word, phonemes, feature_to_type, feature_to_sounds,
-                                                     [ExampleType.CADT]):
+            if ExampleType.CADT not in self.classify(word, phonemes, feature_to_type, feature_to_sounds,):
                 return word
 
         index = self._CADT_lib[word]
         return self._do_replace(word, index[0], index[1], feature_to_type, feature_to_sounds)
 
     def classify(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
-                 feature_to_sounds: Dict[str, List[Sound]], limit: List[ExampleType]) -> Dict[ExampleType, str]:
+                 feature_to_sounds: Dict[str, List[Sound]]) -> Dict[ExampleType, str]:
         a_data = self.locations_a(word, phonemes, feature_to_sounds)
         a_locations = a_data[0]
         a_size = a_data[1]
-
-        c_limit = None
-        if ExampleType.CADT not in limit and ExampleType.CADNT not in limit and ExampleType.CAND not in limit:
-            c_limit = False
-        elif ExampleType.NCAND not in limit and ExampleType.NCAD not in limit and ExampleType.IRR not in limit:
-            c_limit = True
-
-        d_limit = None
-        if ExampleType.CADT not in limit and ExampleType.CADNT not in limit and ExampleType.NCAD not in limit:
-            d_limit = False
-        elif ExampleType.CAND not in limit and ExampleType.NCAND not in limit and ExampleType.IRR not in limit:
-            d_limit = True
 
         if len(a_locations) == 0 or a_locations == []:
             return {ExampleType.IRR: ''}
@@ -90,17 +77,16 @@ class Rule:
                     else:
                         raise AttributeError("unknown string for C: %s" % self._C)
                 else:
-                    if c_matcher is None or c_size is None:
-                        c_matcher = Template(self._C).generate_word_list(phonemes, feature_to_sounds)
-                        c_size = len(c_matcher[0])
+                    if c_matcher is None:
+                        c_matcher = Template(self._C).generate_word_list(phonemes, None, feature_to_sounds)
 
                     for c_pattern in c_matcher:
+                        if c_size is None:
+                            c_size = len(c_pattern)
+
                         if a_loc - c_size >= 0 and word[a_loc - c_size:a_loc] == c_pattern:
                             is_c = True
                             break
-
-                if c_limit is not None and is_c != c_limit:
-                    continue
 
                 is_d = False
 
@@ -115,17 +101,15 @@ class Rule:
 
                 else:
                     if d_matcher is None or d_size is None:
-                        d_matcher = Template(self._D).generate_word_list(phonemes, feature_to_sounds)
+                        d_matcher = Template(self._D).generate_word_list(phonemes, None, feature_to_sounds)
                         d_size = len(d_matcher[0])
 
                     for d_pattern in d_matcher:
+
                         if a_loc + a_size + d_size <= len(word) and \
                                 word[a_loc + a_size:a_loc + a_size + d_size] == d_pattern:
                             is_d = True
                             break
-
-                if d_limit is not None and is_d != d_limit:
-                    continue
 
                 a_str = word[a_loc]
                 if is_c and is_d:
@@ -153,7 +137,7 @@ class Rule:
             else:
                 raise AttributeError('A can only be Null or List of particles')
 
-        a_matcher = Template(self._A).generate_word_list(phonemes, feature_to_sounds)
+        a_matcher = Template(self._A).generate_word_list(phonemes,None,feature_to_sounds)
         prev_index = 0
         locations = []
         size = len(a_matcher[0])

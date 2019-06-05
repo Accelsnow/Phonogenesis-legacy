@@ -1,3 +1,6 @@
 [non syllabic]-[syllabic]
 [non syllabic]-[syllabic]-[non syllabic]
 [non syllabic]-[syllabic]-[non syllabic]-[syllabic]
+[non syllabic]-[syllabic]-[non syllabic]-[syllabic]-[non syllabic]
+[non syllabic]-[syllabic]-[non syllabic]-[non syllabic]-[syllabic]
+[non syllabic]-[syllabic]-[non syllabic]-[non syllabic]-[syllabic]-[non syllabic]

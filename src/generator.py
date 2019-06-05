@@ -7,7 +7,7 @@ from rules import Rule, ExampleType
 import random
 import warnings
 
-WORD_NUM_LIMIT = 50
+WORD_LIST_SIZE_LIMIT = 1000
 
 
 class Generator:
@@ -44,23 +44,11 @@ class Generator:
 
     def _initialize_templates(self, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> None:
         for template in self._templates:
-            word_list = template.generate_word_list(self._phonemes, feature_to_sounds)
+            word_list = template.generate_word_list(self._phonemes, WORD_LIST_SIZE_LIMIT, feature_to_sounds)
             random.shuffle(word_list)
 
             for word in word_list:
-                limit = []
-                if len(self._CADT.values()) < 50: limit.append(ExampleType.CADT)
-                if len(self._CADNT.values()) < 50: limit.append(ExampleType.CADNT)
-                if len(self._CAND.values()) < 50: limit.append(ExampleType.CAND)
-                if len(self._NCAD.values()) < 50: limit.append(ExampleType.NCAD)
-                if len(self._NCAND.values()) < 50: limit.append(ExampleType.NCAND)
-                if len(self._IRR.values()) < 50: limit.append(ExampleType.IRR)
-
-                if len(limit) == 0:
-                    break
-
-                word_types = self._rule.classify(word, self._phonemes, feature_to_type, feature_to_sounds, limit)
-
+                word_types = self._rule.classify(word, self._phonemes, feature_to_type, feature_to_sounds)
                 has_exclusive_type = False
 
                 if ExampleType.IRR in word_types:
@@ -113,7 +101,8 @@ class Generator:
         if cadt + cadnt + cand + ncad + ncand + irr > amount:
             irr -= 1
 
-        print("Expected Number:", "CADT", cadt, "CADNT", cadnt, "CAND", cand, "NCAD", ncad, "NCAND", ncand, "IRR", irr)
+        print("\nExpected Number:", "CADT", cadt, "CADNT", cadnt, "CAND", cand, "NCAD", ncad, "NCAND", ncand, "IRR",
+              irr)
         return cadt, cadnt, cand, ncad, ncand, irr
 
     @staticmethod
@@ -217,7 +206,7 @@ class Generator:
             if diff > 0:
                 warnings.warn("CRITICAL WARNING: No available word left in any category. (%d missing)" % diff)
 
-        print("Actual Number:", "CADT", len(cadt_words), "CADNT", len(cadnt_words), "CAND", len(cand_words), "NCAD",
+        print("\nActual Number:", "CADT", len(cadt_words), "CADNT", len(cadnt_words), "CAND", len(cand_words), "NCAD",
               len(ncad_words), "NCAND", len(ncand_words), "IRR", len(irr_words))
         # random.shuffle(underlying_rep)
 

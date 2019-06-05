@@ -5,6 +5,7 @@ from sound import Sound
 from rules import Rule, import_default_rules
 from templates import Template, import_default_templates, import_default_phonemes
 from generator import Generator
+import sys
 
 from typing import List, Tuple, Dict, Any
 
@@ -21,31 +22,58 @@ if __name__ == '__main__':
     templates = import_default_templates(features)  # type: List[Template]
 
     print("full templates: ")
+    ti = 1
     for template in templates:
-        print(template)
+        print(ti, template)
+        ti += 1
 
     rules = import_default_rules(features)  # type: List[Rule]
 
     print("\nfull rules: ")
+    ri = 1
     for rule in rules:
-        print(rule)
+        print(ri, rule)
+        ri += 1
 
     phonemes = import_default_phonemes()
 
     print("\nfull phonemes: ", [str(p) for p in phonemes])
 
+    print("\n==================================================\n")
+
     # while True:
     # word = input("\nWord to check: ")
     # print(rules[1].classify("susu", phonemes, feature_to_type, feature_to_sounds))
 
-    gen = Generator(phonemes, templates, rules[1], 5, feature_to_type, feature_to_sounds)
-    result = gen.generate(20, feature_to_type, feature_to_sounds)
-    print("=====RESULTS=====")
+    if len(sys.argv) > 1:
+        use_templates = [templates[int(s) - 1] for s in sys.argv[1].split(",")]
+        use_rule = rules[int(sys.argv[2]) - 1]
+        amount = int(sys.argv[3])
+    else:
+        use_templates = templates
+        use_rule = rules[0]
+        amount = 20
+
+    print("USING TEMPLATES: ")
+    ti = 1
+    for template in use_templates:
+        print(ti, template)
+        ti += 1
+
+    print("\nUSING RULE: ", use_rule)
+    print("\nGENERATION AMOUNT:", amount, '\n')
+
+    gen = Generator(phonemes, use_templates, use_rule, 5, feature_to_type, feature_to_sounds)
+
+    result = gen.generate(amount, feature_to_type, feature_to_sounds)
+
+    print("=============RESULTS================")
     print("SR: ", [str(s) for s in result[0]])
     print("UR: ", [str(s) for s in result[1]])
     print("RULE: ", result[2])
-    print("TEMPLATES: ", [str(s) for s in result[3]])
-
+    print("TEMPLATES: ")
+    for t in [str(s) for s in result[3]]:
+        print(t)
 
     #
     # print(sounds[0].get_transformed_sound(Particle(["voiced"]), feature_to_type, feature_to_sounds))

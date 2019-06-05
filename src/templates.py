@@ -1,7 +1,8 @@
 from __future__ import annotations
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set
 from sound import Sound
 from feature_lib import Particle
+import random
 
 
 class Template:
@@ -14,23 +15,31 @@ class Template:
 
     def generate_word_list(self, phonemes: Optional[List[Sound], None], size_limit: Optional[int, None],
                            feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
-        comb_sounds = []  # type: List[List[Sound]]
-        curr_size = 0  # type: int
+        word_len = len(self._components)
+        part_sounds = []
+        word_list = set([])
 
         for particle in self._components:
-            comb_sounds.append(particle.get_matching_sounds(phonemes, feature_to_sounds))
+            part_sound = particle.get_matching_sounds(phonemes, feature_to_sounds)
+            part_sounds.append(part_sound)
 
-        return self._recur_word(comb_sounds, 0, [''])
+        if size_limit is None:
+            return self._recur_full_word_list(part_sounds, 0, [''])
+        else:
+            word_count = 0
+            while word_count < size_limit:
+                curr_word = ''
 
-    def get_word_list_size(self, phonemes: Optional[List[Sound], None],
-                           feature_to_sounds: Dict[str, List[Sound]]) -> int:
-        size = 1
-        for particle in self._components:
-            size *= len(particle.get_matching_sounds(phonemes, feature_to_sounds))
+                for i in range(word_len):
+                    curr_word += str(random.choice(part_sounds[i]))
 
-        return size
+                word_list.add(curr_word)
+                word_count += 1
 
-    def _recur_word(self, comb_sound: List[List[Sound]], index: int, words: List[str]) -> List[str]:
+            result = list(word_list)
+            return result
+
+    def _recur_full_word_list(self, comb_sound: List[List[Sound]], index: int, words: List[str]) -> List[str]:
         if index >= len(comb_sound):
             return words
         else:
@@ -40,7 +49,15 @@ class Template:
                 for word in words:
                     new_words.append(word + str(sound))
 
-            return self._recur_word(comb_sound, index + 1, new_words)
+            return self._recur_full_word_list(comb_sound, index + 1, new_words)
+
+    def get_word_list_size(self, phonemes: Optional[List[Sound], None],
+                           feature_to_sounds: Dict[str, List[Sound]]) -> int:
+        size = 1
+        for particle in self._components:
+            size *= len(particle.get_matching_sounds(phonemes, feature_to_sounds))
+
+        return size
 
     def get_components(self) -> List[Particle]:
         return [block for block in self._components]
