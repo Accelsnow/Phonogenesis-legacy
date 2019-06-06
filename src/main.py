@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from feature_lib import Particle, import_default_features
-from sound import Sound
-from rules import Rule, import_default_rules
-from templates import Template, import_default_templates, import_default_phonemes
-from generator import Generator
 import sys
+from typing import List, Dict
 
-from typing import List, Tuple, Dict, Any
+from feature_lib import Particle, import_default_features
+from generator import Generator
+from rules import Rule, import_default_rules
+from sound import Sound
+from templates import Template, import_default_templates, import_default_phonemes
 
 if __name__ == '__main__':
     tup = import_default_features()

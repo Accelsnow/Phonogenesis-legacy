@@ -1,11 +1,12 @@
 from __future__ import annotations
-from typing import List, Tuple, Dict, Set
 
-from sound import Sound
-from templates import Template
-from rules import Rule, ExampleType
 import random
 import warnings
+from typing import List, Tuple, Dict
+
+from rules import Rule, ExampleType
+from sound import Sound
+from templates import Template
 
 WORD_LIST_SIZE_LIMIT = 1000
 
@@ -73,7 +74,8 @@ class Generator:
     @staticmethod
     def _dict_add(dic: Dict[str, List[str]], key: str, value: str) -> None:
         if key in dic:
-            dic[key].append(value)
+            if value not in dic[key]:
+                dic[key].append(value)
         else:
             dic[key] = [value]
 

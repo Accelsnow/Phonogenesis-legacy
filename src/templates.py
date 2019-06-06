@@ -1,8 +1,10 @@
 from __future__ import annotations
-from typing import List, Dict, Optional, Set
-from sound import Sound
-from feature_lib import Particle
+
 import random
+from typing import List, Dict, Optional
+
+from feature_lib import Particle
+from sound import Sound
 
 
 class Template:

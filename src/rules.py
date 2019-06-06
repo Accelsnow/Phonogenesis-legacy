@@ -1,9 +1,11 @@
 from __future__ import annotations
-from typing import List, Optional, Dict, Tuple, Set
-from feature_lib import Particle
-from templates import Template
-from sound import Sound
+
 from enum import Enum
+from typing import List, Optional, Dict, Tuple
+
+from feature_lib import Particle
+from sound import Sound
+from templates import Template
 
 EDGE_SYMBOL = '#'
 NULL_SYMBOL = ''
@@ -46,7 +48,7 @@ class Rule:
     def apply(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
               feature_to_sounds: Dict[str, List[Sound]]) -> str:
         if word not in self._CADT_lib.keys():
-            if ExampleType.CADT not in self.classify(word, phonemes, feature_to_type, feature_to_sounds,):
+            if ExampleType.CADT not in self.classify(word, phonemes, feature_to_type, feature_to_sounds, ):
                 return word
 
         index = self._CADT_lib[word]
@@ -55,8 +57,8 @@ class Rule:
     def classify(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
                  feature_to_sounds: Dict[str, List[Sound]]) -> Dict[ExampleType, str]:
         a_data = self.locations_a(word, phonemes, feature_to_sounds)
-        a_locations = a_data[0]
-        a_size = a_data[1]
+        a_locations = a_data[0]  # type: List[int]
+        a_size = a_data[1]  # type: int
 
         if len(a_locations) == 0 or a_locations == []:
             return {ExampleType.IRR: ''}
@@ -137,10 +139,10 @@ class Rule:
             else:
                 raise AttributeError('A can only be Null or List of particles')
 
-        a_matcher = Template(self._A).generate_word_list(phonemes,None,feature_to_sounds)
-        prev_index = 0
-        locations = []
-        size = len(a_matcher[0])
+        a_matcher = Template(self._A).generate_word_list(phonemes, None, feature_to_sounds)
+        prev_index = 0  # type: int
+        locations = []  # type: List[int]
+        size = len(a_matcher[0])  # type: int
         i = 0
 
         while i < len(a_matcher):
@@ -161,6 +163,7 @@ class Rule:
     def _do_replace(self, word: str, begin_index: int, end_index: int, feature_to_type: Dict[str, str],
                     feature_to_sounds: Dict[str, List[Sound]]) -> str:
         target = word[begin_index:end_index]
+
         if isinstance(self._B, str):
             raise NotImplementedError
         else:

@@ -1,8 +1,9 @@
 from __future__ import annotations
-import csv
-from sound import Sound
 
+import csv
 from typing import List, Tuple, Dict, Optional
+
+from sound import Sound
 
 
 class Particle:
