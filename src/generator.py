@@ -10,30 +10,32 @@ from templates import Template
 
 WORD_LIST_SIZE_LIMIT = 1000
 
+EXCLUSION_TYPES = [ExampleType.CADT, ExampleType.CADNT]
+
 
 class Generator:
     _difficulty: int  # 0- 10
     _difficulty_to_percent: Dict[int, Tuple[float, float, float, float, float, float]]
     _templates: List[Template]
     _rule: Rule
-    _CADT: Dict[str, List[str]]
-    _CADNT: Dict[str, List[str]]
-    _CAND: Dict[str, List[str]]
-    _NCAD: Dict[str, List[str]]
-    _NCAND: Dict[str, List[str]]
-    _IRR: Dict[str, List[str]]
     _phonemes: List[Sound]
+    _CADT: List[Dict[str, List[str]]]
+    _CADNT: List[Dict[str, List[str]]]
+    _CAND: List[Dict[str, List[str]]]
+    _NCAD: List[Dict[str, List[str]]]
+    _NCAND: List[Dict[str, List[str]]]
+    _IRR: List[Dict[str, List[str]]]
 
     def __init__(self, phonemes: List[Sound], templates: List[Template], rule: Rule, difficulty: int,
                  feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> None:
         self._templates = templates
         self._rule = rule
-        self._CADT = {}
-        self._CADNT = {}
-        self._CAND = {}
-        self._NCAD = {}
-        self._NCAND = {}
-        self._IRR = {}
+        self._CADT = []
+        self._CADNT = []
+        self._CAND = []
+        self._NCAD = []
+        self._NCAND = []
+        self._IRR = []
         self._phonemes = phonemes
 
         self._difficulty_to_percent = {
@@ -44,32 +46,55 @@ class Generator:
         self._initialize_templates(feature_to_type, feature_to_sounds)
 
     def _initialize_templates(self, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> None:
+        initialized = False
+
         for template in self._templates:
             word_list = template.generate_word_list(self._phonemes, WORD_LIST_SIZE_LIMIT, feature_to_sounds)
             random.shuffle(word_list)
 
             for word in word_list:
-                word_types = self._rule.classify(word, self._phonemes, feature_to_type, feature_to_sounds)
-                has_exclusive_type = False
+                classify_data = self._rule.classify(word, self._phonemes, feature_to_type, feature_to_sounds)
+                records = []  # type: List[Tuple[ExampleType, Dict[str, List[str]], str, str]]
+                exclusion_lock = False
 
-                if ExampleType.IRR in word_types:
-                    self._dict_add(self._IRR, word_types[ExampleType.IRR], word)
-                    has_exclusive_type = True
-                else:
-                    if ExampleType.CADT in word_types:
-                        self._dict_add(self._CADT, word_types[ExampleType.CADT], word)
-                        has_exclusive_type = True
-                    if ExampleType.CADNT in word_types:
-                        self._dict_add(self._CADNT, word_types[ExampleType.CADNT], word)
-                        has_exclusive_type = True
+                for index in range(0, len(classify_data)):
+                    data = classify_data[index]
 
-                if not has_exclusive_type:
-                    if ExampleType.CAND in word_types:
-                        self._dict_add(self._CAND, word_types[ExampleType.CAND], word)
-                    if ExampleType.NCAD in word_types:
-                        self._dict_add(self._NCAD, word_types[ExampleType.NCAD], word)
-                    if ExampleType.NCAND in word_types:
-                        self._dict_add(self._NCAND, word_types[ExampleType.NCAND], word)
+                    if not initialized:
+                        self._CADT.append({})
+                        self._CADNT.append({})
+                        self._CAND.append({})
+                        self._NCAD.append({})
+                        self._NCAND.append({})
+                        self._IRR.append({})
+
+                    if ExampleType.IRR in data:
+                        records.append((ExampleType.IRR, self._IRR[index], data[ExampleType.IRR], word))
+                    elif ExampleType.CADT in data:
+                        records = [(ExampleType.CADT, self._CADT[index], data[ExampleType.CADT], word)]
+                        break
+
+                    if ExampleType.CADNT in data:
+                        records = [(ExampleType.CADNT, self._CADNT[index], data[ExampleType.CADNT], word)]
+                        exclusion_lock = True
+
+                    if not exclusion_lock:
+                        if ExampleType.CAND in data:
+                            records.append((ExampleType.CAND, self._CAND[index], data[ExampleType.CAND], word))
+
+                        if ExampleType.NCAD in data:
+                            records.append((ExampleType.NCAD, self._NCAD[index], data[ExampleType.NCAD], word))
+
+                        if ExampleType.NCAND in data:
+                            records.append((ExampleType.NCAND, self._NCAND[index], data[ExampleType.NCAND], word))
+
+                no_irr = False in [r[0] == ExampleType.IRR for r in records]
+
+                for record in records:
+                    if record[0] != ExampleType.IRR or not no_irr:
+                        self._dict_add(record[1], record[2], record[3])
+
+                initialized = True
 
     @staticmethod
     def _dict_add(dic: Dict[str, List[str]], key: str, value: str) -> None:
@@ -120,10 +145,15 @@ class Generator:
 
     @staticmethod
     def _generate_words(amount: int, dic: Dict[str, List[str]]) -> List[str]:
+        if amount == 0:
+            return []
+
         words = []
         rand_keys = list(dic)
         curr_index = 0
         continue_find = True
+        empty_run = 0
+        prev_len = None
 
         for key in rand_keys:
             random.shuffle(dic[key])
@@ -144,6 +174,14 @@ class Generator:
                             continue_find = False
                             break
 
+            if prev_len is None:
+                prev_len = len(words)
+            elif prev_len == len(words):
+                empty_run += 1
+
+            if empty_run >= 10:
+                break
+
             curr_index += 1
 
         return words
@@ -162,62 +200,69 @@ class Generator:
             Tuple[List[str], List[str], Rule, List[Template]]:
         underlying_rep = []  # type: List[str]
         surface_rep = []  # type: List[str]
+        split_size = len(self._CADT)
+        piece_size = round(amount / split_size)
 
-        cadt_num, cadnt_num, cand_num, ncad_num, ncand_num, irr_num = self._get_num(amount)
+        for index in range(0, split_size):
+            if index == split_size - 1:
+                piece_size = amount - len(underlying_rep)
 
-        # START RANDOM PICK
+            cadt_num, cadnt_num, cand_num, ncad_num, ncand_num, irr_num = self._get_num(piece_size)
 
-        cadt_words, cadt_left = self._generate_helper(self._CADT, cadt_num, "CADT")
-        cadnt_words, cadnt_left = self._generate_helper(self._CADNT, cadnt_num, "CADNT")
-        cand_words, cand_left = self._generate_helper(self._CAND, cand_num, "CAND")
-        ncad_words, ncad_left = self._generate_helper(self._NCAD, ncad_num, "NCAD")
-        ncand_words, ncand_left = self._generate_helper(self._NCAND, ncand_num, "NCAND")
-        irr_words, irr_left = self._generate_helper(self._IRR, irr_num, "IRR")
+            # START RANDOM PICK
 
-        # FINISH RANDOM PICK
-        sum_num = len(cadt_words) + len(cadnt_words) + len(cand_words) + len(ncad_words) + len(ncand_words) + len(
-            irr_words)
+            cadt_words, cadt_left = self._generate_helper(self._CADT[index], cadt_num, "CADT")
+            cadnt_words, cadnt_left = self._generate_helper(self._CADNT[index], cadnt_num, "CADNT")
+            cand_words, cand_left = self._generate_helper(self._CAND[index], cand_num, "CAND")
+            ncad_words, ncad_left = self._generate_helper(self._NCAD[index], ncad_num, "NCAD")
+            ncand_words, ncand_left = self._generate_helper(self._NCAND[index], ncand_num, "NCAND")
+            irr_words, irr_left = self._generate_helper(self._IRR[index], irr_num, "IRR")
 
-        if sum_num < amount:
-            diff = amount - sum_num
+            # FINISH RANDOM PICK
+            sum_num = len(cadt_words) + len(cadnt_words) + len(cand_words) + len(ncad_words) + len(ncand_words) + len(
+                irr_words)
 
-            while len(cadt_left) > 0 and diff > 0:
-                cadt_words.append(cadt_left.pop())
-                diff -= 1
+            if sum_num < piece_size:
+                diff = piece_size - sum_num
 
-            while len(cadnt_left) > 0 and diff > 0:
-                cadnt_words.append(cadnt_left.pop())
-                diff -= 1
+                while len(cadt_left) > 0 and diff > 0:
+                    cadt_words.append(cadt_left.pop())
+                    diff -= 1
 
-            while len(cand_left) > 0 and diff > 0:
-                cand_words.append(cand_left.pop())
-                diff -= 1
+                while len(cadnt_left) > 0 and diff > 0:
+                    cadnt_words.append(cadnt_left.pop())
+                    diff -= 1
 
-            while len(ncad_left) > 0 and diff > 0:
-                ncad_words.append(ncad_left.pop())
-                diff -= 1
+                while len(cand_left) > 0 and diff > 0:
+                    cand_words.append(cand_left.pop())
+                    diff -= 1
 
-            while len(ncand_left) > 0 and diff > 0:
-                ncand_words.append(ncand_left.pop())
-                diff -= 1
+                while len(ncad_left) > 0 and diff > 0:
+                    ncad_words.append(ncad_left.pop())
+                    diff -= 1
 
-            while len(irr_left) > 0 and diff > 0:
-                irr_words.append(irr_left.pop())
-                diff -= 1
+                while len(ncand_left) > 0 and diff > 0:
+                    ncand_words.append(ncand_left.pop())
+                    diff -= 1
 
-            if diff > 0:
-                warnings.warn("CRITICAL WARNING: No available word left in any category. (%d missing)" % diff)
+                while len(irr_left) > 0 and diff > 0:
+                    irr_words.append(irr_left.pop())
+                    diff -= 1
 
-        print("\nActual Number:", "CADT", len(cadt_words), "CADNT", len(cadnt_words), "CAND", len(cand_words), "NCAD",
-              len(ncad_words), "NCAND", len(ncand_words), "IRR", len(irr_words))
-        # random.shuffle(underlying_rep)
+                if diff > 0:
+                    warnings.warn("CRITICAL WARNING: No available word left in any category. (%d missing)" % diff)
 
-        underlying_rep.extend(cadt_words)
-        underlying_rep.extend(cadnt_words)
-        underlying_rep.extend(cand_words)
-        underlying_rep.extend(ncad_words)
-        underlying_rep.extend(ncand_words)
-        underlying_rep.extend(irr_words)
+            print("\nActual Number:", "CADT", len(cadt_words), "CADNT", len(cadnt_words), "CAND", len(cand_words),
+                  "NCAD",
+                  len(ncad_words), "NCAND", len(ncand_words), "IRR", len(irr_words))
+            # random.shuffle(underlying_rep)
+
+            underlying_rep.extend(cadt_words)
+            underlying_rep.extend(cadnt_words)
+            underlying_rep.extend(cand_words)
+            underlying_rep.extend(ncad_words)
+            underlying_rep.extend(ncand_words)
+            underlying_rep.extend(irr_words)
 
         for word in underlying_rep:
             surface_rep.append(self._rule.apply(word, self._phonemes, feature_to_type, feature_to_sounds))

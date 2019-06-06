@@ -29,21 +29,26 @@ class Rule:
     """
     _A: Optional[List[Particle], str]
     _B: Optional[Particle, str]
-    _C: Optional[List[Particle], str]
-    _D: Optional[List[Particle], str]
+    _Cs: List[Optional[List[Particle], str]]
+    _Ds: List[Optional[List[Particle], str]]
     _CADT_lib: Dict[str, Tuple[int, int]]
 
-    def __init__(self, a: Optional[List[Particle], str], b: Optional[Particle, str], c: List[Particle],
-                 d: List[Particle]) -> None:
+    def __init__(self, a: Optional[List[Particle], str], b: Optional[Particle, str],
+                 c: List[Optional[List[Particle], str]], d: List[Optional[List[Particle], str]]) -> None:
         self._A = a
         self._B = b
-        self._C = c
-        self._D = d
+
+        if len(c) != len(d):
+            raise AttributeError("C and D list can not have different length %s _ %s" % (c, d))
+
+        self._Cs = c
+        self._Ds = d
+
         self._CADT_lib = {}
 
-    def get_info(self) -> Tuple[
-        List[Particle], Optional[Particle, str], Optional[List[Particle], str], Optional[List[Particle], str]]:
-        return self._A, self._B, self._C, self._D
+    def get_info(self) -> Tuple[List[Particle], Optional[Particle, str], List[Optional[List[Particle], str]], List[
+        Optional[List[Particle], str]]]:
+        return self._A, self._B, self._Cs, self._Ds
 
     def apply(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
               feature_to_sounds: Dict[str, List[Sound]]) -> str:
@@ -55,81 +60,85 @@ class Rule:
         return self._do_replace(word, index[0], index[1], feature_to_type, feature_to_sounds)
 
     def classify(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
-                 feature_to_sounds: Dict[str, List[Sound]]) -> Dict[ExampleType, str]:
+                 feature_to_sounds: Dict[str, List[Sound]]) -> List[Dict[ExampleType, str]]:
         a_data = self.locations_a(word, phonemes, feature_to_sounds)
         a_locations = a_data[0]  # type: List[int]
         a_size = a_data[1]  # type: int
 
         if len(a_locations) == 0 or a_locations == []:
-            return {ExampleType.IRR: ''}
+            return [{ExampleType.IRR: ''} for _ in range(0, len(self._Cs))]
         else:
-            types = {}  # type: Dict[ExampleType, str]
+            types_to_sounds = [{} for _ in range(0, len(self._Cs))]  # type: List[Dict[ExampleType, str]]
             c_matcher, c_size = None, None
             d_matcher, d_size = None, None
 
             for a_loc in a_locations:
-                is_c = False
+                for i in range(0, len(self._Cs)):
+                    c_instance = self._Cs[i]
+                    d_instance = self._Ds[i]
 
-                if isinstance(self._C, str):
-                    if self._C == NULL_SYMBOL:
-                        is_c = True
-                    elif self._C == EDGE_SYMBOL:
-                        if a_loc == 0:
+                    is_c = False
+
+                    if isinstance(c_instance, str):
+                        if c_instance == NULL_SYMBOL:
                             is_c = True
+                        elif c_instance == EDGE_SYMBOL:
+                            if a_loc == 0:
+                                is_c = True
+                        else:
+                            raise AttributeError("unknown string for C: %s" % c_instance)
                     else:
-                        raise AttributeError("unknown string for C: %s" % self._C)
-                else:
-                    if c_matcher is None:
-                        c_matcher = Template(self._C).generate_word_list(phonemes, None, feature_to_sounds)
+                        if c_matcher is None:
+                            c_matcher = Template(c_instance).generate_word_list(phonemes, None, feature_to_sounds)
 
-                    for c_pattern in c_matcher:
-                        if c_size is None:
-                            c_size = len(c_pattern)
+                        for c_pattern in c_matcher:
+                            if c_size is None:
+                                c_size = len(c_pattern)
 
-                        if a_loc - c_size >= 0 and word[a_loc - c_size:a_loc] == c_pattern:
-                            is_c = True
-                            break
+                            if a_loc - c_size >= 0 and word[a_loc - c_size:a_loc] == c_pattern:
+                                is_c = True
+                                break
 
-                is_d = False
+                    is_d = False
 
-                if isinstance(self._D, str):
-                    if self._D == NULL_SYMBOL:
-                        is_d = True
-                    elif self._D == EDGE_SYMBOL:
-                        if a_loc == len(word) - 1:
+                    if isinstance(d_instance, str):
+                        if d_instance == NULL_SYMBOL:
                             is_d = True
+                        elif d_instance == EDGE_SYMBOL:
+                            if a_loc == len(word) - 1:
+                                is_d = True
+                        else:
+                            raise AttributeError("unknown string for D: %s" % d_instance)
+
                     else:
-                        raise AttributeError("unknown string for D: %s" % self._D)
+                        if d_matcher is None or d_size is None:
+                            d_matcher = Template(d_instance).generate_word_list(phonemes, None, feature_to_sounds)
+                            d_size = len(d_matcher[0])
 
-                else:
-                    if d_matcher is None or d_size is None:
-                        d_matcher = Template(self._D).generate_word_list(phonemes, None, feature_to_sounds)
-                        d_size = len(d_matcher[0])
+                        for d_pattern in d_matcher:
 
-                    for d_pattern in d_matcher:
+                            if a_loc + a_size + d_size <= len(word) and \
+                                    word[a_loc + a_size:a_loc + a_size + d_size] == d_pattern:
+                                is_d = True
+                                break
 
-                        if a_loc + a_size + d_size <= len(word) and \
-                                word[a_loc + a_size:a_loc + a_size + d_size] == d_pattern:
-                            is_d = True
-                            break
+                    a_str = word[a_loc]
+                    if is_c and is_d:
+                        if word != self._do_replace(word, a_loc, a_loc + a_size, feature_to_type, feature_to_sounds):
+                            types_to_sounds[i] = {ExampleType.CADT: a_str}
+                            self._CADT_lib[word] = a_loc, a_loc + a_size
+                        elif ExampleType.CADT not in types_to_sounds[i]:
+                            types_to_sounds[i] = {ExampleType.CADNT: a_str}
 
-                a_str = word[a_loc]
-                if is_c and is_d:
-                    if word != self._do_replace(word, a_loc, a_loc + a_size, feature_to_type, feature_to_sounds):
-                        types = {ExampleType.CADT: a_str}
-                        self._CADT_lib[word] = a_loc, a_loc + a_size
-                    elif ExampleType.CADT not in types:
-                        types = {ExampleType.CADNT: a_str}
+                    elif ExampleType.CADT not in types_to_sounds[i] and ExampleType.CADNT not in types_to_sounds[i]:
+                        if is_c and not is_d:
+                            types_to_sounds[i][ExampleType.CAND] = a_str
+                        elif not is_c and is_d:
+                            types_to_sounds[i][ExampleType.NCAD] = a_str
+                        elif not is_c and not is_d:
+                            types_to_sounds[i][ExampleType.NCAND] = a_str
 
-                elif ExampleType.CADT not in types and ExampleType.CADNT not in types:
-                    if is_c and not is_d:
-                        types[ExampleType.CAND] = a_str
-                    elif not is_c and is_d:
-                        types[ExampleType.NCAD] = a_str
-                    elif not is_c and not is_d:
-                        types[ExampleType.NCAND] = a_str
-
-            return types
+            return types_to_sounds
 
     def locations_a(self, word: str, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> Tuple[
         List[int], int]:
@@ -156,7 +165,10 @@ class Rule:
                 i -= 1
             except ValueError:
                 i += 1
+                prev_index = 0
                 continue
+
+            i += 1
 
         return locations, size
 
@@ -176,8 +188,9 @@ class Rule:
 
     def __str__(self) -> str:
         return "%s -> %s / %s _ %s" % (
-            "".join([str(s) for s in self._A]), str(self._B), "".join([str(s) for s in self._C]),
-            "".join([str(s) for s in self._D]))
+            "".join([str(s) for s in self._A]), str(self._B),
+            "&".join(["".join([str(s) for s in self._Cs[r]]) for r in range(0, len(self._Cs))]),
+            "&".join(["".join([str(s) for s in self._Ds[r]]) for r in range(0, len(self._Ds))]))
 
 
 def import_default_rules(feature_pool: List[str]) -> List[Rule]:
@@ -197,21 +210,30 @@ def _fetch_rule_csv(feature_pool: List[str], filename: str) -> List[Rule]:
                 raise ImportError("Invalid rule format: %s" % line)
 
             action_break = mid_break[0].split(">")
-            condition_break = mid_break[1].split("_")
 
-            if len(action_break) != 2 or len(condition_break) != 2:
+            if len(action_break) != 2:
                 raise ImportError("Invalid rule format: %s" % line)
 
             asec = action_break[0]
             bsec = action_break[1]
-            csec = condition_break[0]
-            dsec = condition_break[1]
 
             if bsec[0] == '[' and bsec[-1] == ']':
                 bsec = Particle(bsec.lstrip("[").rstrip("]").split(","))
 
-            rules.append(Rule(_sec_to_particles(feature_pool, asec), bsec,
-                              _sec_to_particles(feature_pool, csec), _sec_to_particles(feature_pool, dsec)))
+            conditions = mid_break[1].split("&")
+            c_list = []  # type: List[Optional[List[Particle], str]]
+            d_list = []  # type: List[Optional[List[Particle], str]]
+
+            for cond_sec in conditions:
+                condition_break = cond_sec.split("_")
+
+                if len(condition_break) != 2:
+                    raise ImportError("Invalid rule format: %s" % cond_sec)
+
+                c_list.append(_sec_to_particles(feature_pool, condition_break[0]))
+                d_list.append(_sec_to_particles(feature_pool, condition_break[1]))
+
+            rules.append(Rule(_sec_to_particles(feature_pool, asec), bsec, c_list, d_list))
     return rules
 
 

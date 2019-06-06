@@ -42,8 +42,9 @@ if __name__ == '__main__':
     print("\n==================================================\n")
 
     # while True:
-    # word = input("\nWord to check: ")
-    # print(rules[1].classify("susu", phonemes, feature_to_type, feature_to_sounds))
+    #     #word = input("\nWord to check: ")
+    #     word = "potzi"
+    #     print(rules[3].classify(word, phonemes, feature_to_type, feature_to_sounds))
 
     if len(sys.argv) > 1:
         use_templates = [templates[int(s) - 1] for s in sys.argv[1].split(",")]
@@ -51,7 +52,7 @@ if __name__ == '__main__':
         amount = int(sys.argv[3])
     else:
         use_templates = templates
-        use_rule = rules[0]
+        use_rule = rules[3]
         amount = 20
 
     print("USING TEMPLATES: ")

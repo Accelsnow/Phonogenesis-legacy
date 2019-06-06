@@ -1,3 +1,5 @@
 [obstruent]>[voiceless]/_#
-[not spread,fricative]>[voiced]/[syllabic]_[syllabic]
-[velar,oral stop]>[postalveolar,affricate]/_[front,syllabic]
+[voiceless,oral stop]>[spread]/#_
+[not spread,fricative]>[voiced]/[vowel]_[vowel]
+[vowel]>[lax]/_[consonant][consonant]&[consonant][consonant]_
+[velar,oral stop]>[postalveolar,affricate]/_[front,vowel]
