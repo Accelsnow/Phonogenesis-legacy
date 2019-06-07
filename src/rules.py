@@ -8,7 +8,6 @@ from sound import Sound
 from templates import Template
 
 EDGE_SYMBOL = '#'
-NULL_SYMBOL = ''
 
 
 class ExampleType(Enum):
@@ -27,14 +26,17 @@ class Rule:
     """
     A>B/C_D
     """
-    _A: Optional[List[Particle], str]
-    _B: Optional[Particle, str]
-    _Cs: List[Optional[List[Particle], str]]
-    _Ds: List[Optional[List[Particle], str]]
+    _A: Optional[List[Particle], None]
+    _B: Optional[Particle, str, None]
+    _Cs: List[Optional[List[Particle], None]]
+    _Ds: List[Optional[List[Particle], None]]
     _CADT_lib: Dict[str, Tuple[int, int]]
+    _Cs_edge: List[bool]
+    _Ds_edge: List[bool]
 
-    def __init__(self, a: Optional[List[Particle], str], b: Optional[Particle, str],
-                 c: List[Optional[List[Particle], str]], d: List[Optional[List[Particle], str]]) -> None:
+    def __init__(self, a: Optional[List[Particle], None], b: Optional[Particle, str, None],
+                 c: List[Optional[List[Particle], None]], c_edge: List[bool], d: List[Optional[List[Particle], None]],
+                 d_edge: List[bool]) -> None:
         self._A = a
         self._B = b
 
@@ -43,6 +45,8 @@ class Rule:
 
         self._Cs = c
         self._Ds = d
+        self._Cs_edge = c_edge
+        self._Ds_edge = d_edge
 
         self._CADT_lib = {}
 
@@ -76,17 +80,15 @@ class Rule:
                 for i in range(0, len(self._Cs)):
                     c_instance = self._Cs[i]
                     d_instance = self._Ds[i]
+                    c_edge = self._Cs_edge[i]
+                    d_edge = self._Ds_edge[i]
 
                     is_c = False
 
-                    if isinstance(c_instance, str):
-                        if c_instance == NULL_SYMBOL:
-                            is_c = True
-                        elif c_instance == EDGE_SYMBOL:
-                            if a_loc == 0:
-                                is_c = True
-                        else:
-                            raise AttributeError("unknown string for C: %s" % c_instance)
+                    if c_edge and a_loc != 0:
+                        is_c = False
+                    elif c_instance is None:
+                        is_c = True
                     else:
                         if c_matcher is None:
                             c_matcher = Template(c_instance).generate_word_list(phonemes, None, feature_to_sounds)
@@ -101,24 +103,19 @@ class Rule:
 
                     is_d = False
 
-                    if isinstance(d_instance, str):
-                        if d_instance == NULL_SYMBOL:
-                            is_d = True
-                        elif d_instance == EDGE_SYMBOL:
-                            if a_loc == len(word) - 1:
-                                is_d = True
-                        else:
-                            raise AttributeError("unknown string for D: %s" % d_instance)
-
+                    if d_edge and a_loc != 0:
+                        is_d = False
+                    elif d_instance is None:
+                        is_d = True
                     else:
-                        if d_matcher is None or d_size is None:
+                        if d_matcher is None:
                             d_matcher = Template(d_instance).generate_word_list(phonemes, None, feature_to_sounds)
-                            d_size = len(d_matcher[0])
 
                         for d_pattern in d_matcher:
+                            if d_size is None:
+                                d_size = len(d_pattern)
 
-                            if a_loc + a_size + d_size <= len(word) and \
-                                    word[a_loc + a_size:a_loc + a_size + d_size] == d_pattern:
+                            if a_loc - d_size >= 0 and word[a_loc - d_size:a_loc] == d_pattern:
                                 is_d = True
                                 break
 
@@ -142,11 +139,8 @@ class Rule:
 
     def locations_a(self, word: str, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> Tuple[
         List[int], int]:
-        if isinstance(self._A, str):
-            if self._A == NULL_SYMBOL:
-                return [i for i in range(0, len(word))], 0
-            else:
-                raise AttributeError('A can only be Null or List of particles')
+        if self._A is None:
+            return [i for i in range(0, len(word))], 0
 
         a_matcher = Template(self._A).generate_word_list(phonemes, None, feature_to_sounds)
         prev_index = 0  # type: int
@@ -179,7 +173,10 @@ class Rule:
         if isinstance(self._B, str):
             raise NotImplementedError
         else:
-            dest_sound = Sound('', [])[target].get_transformed_sound(self._B, feature_to_type, feature_to_sounds)
+            if self._B is None:
+                dest_sound = ''
+            else:
+                dest_sound = Sound('', [])[target].get_transformed_sound(self._B, feature_to_type, feature_to_sounds)
 
             if dest_sound is not None:
                 return word[:begin_index] + str(dest_sound) + word[end_index:]
@@ -187,10 +184,35 @@ class Rule:
                 return word
 
     def __str__(self) -> str:
-        return "%s -> %s / %s _ %s" % (
-            "".join([str(s) for s in self._A]), str(self._B),
-            "&".join(["".join([str(s) for s in self._Cs[r]]) for r in range(0, len(self._Cs))]),
-            "&".join(["".join([str(s) for s in self._Ds[r]]) for r in range(0, len(self._Ds))]))
+        cd_str = ''
+
+        for i in range(0, len(self._Cs)):
+            if len(cd_str) > 0:
+                cd_str += ' or '
+
+            c_block = self._Cs[i]
+            d_block = self._Ds[i]
+            c_edge = self._Cs_edge[i]
+            d_edge = self._Ds_edge[i]
+
+            c_part = ''
+            if c_edge:
+                c_part += '#'
+            if c_block is not None:
+                c_part += "".join([str(s) for s in c_block])
+
+            d_part = ''
+            if d_block is not None:
+                d_part += "".join([str(s) for s in d_block])
+            if d_edge:
+                d_part += '#'
+
+            part = "%s _ %s" % (c_part, d_part)
+
+            cd_str += part
+
+        return "%s -> %s / %s" % (
+            "".join([str(s) for s in self._A]), str(self._B), cd_str)
 
 
 def import_default_rules(feature_pool: List[str]) -> List[Rule]:
@@ -217,12 +239,16 @@ def _fetch_rule_csv(feature_pool: List[str], filename: str) -> List[Rule]:
             asec = action_break[0]
             bsec = action_break[1]
 
-            if bsec[0] == '[' and bsec[-1] == ']':
+            if len(bsec) == 0:
+                bsec = None
+            elif bsec[0] == '[' and bsec[-1] == ']':
                 bsec = Particle(bsec.lstrip("[").rstrip("]").split(","))
 
             conditions = mid_break[1].split("&")
-            c_list = []  # type: List[Optional[List[Particle], str]]
-            d_list = []  # type: List[Optional[List[Particle], str]]
+            c_list = []  # type: List[Optional[List[Particle], None]]
+            d_list = []  # type: List[Optional[List[Particle], None]]
+            c_edge = []  # type: List[bool]
+            d_edge = []  # type: List[bool]
 
             for cond_sec in conditions:
                 condition_break = cond_sec.split("_")
@@ -230,20 +256,35 @@ def _fetch_rule_csv(feature_pool: List[str], filename: str) -> List[Rule]:
                 if len(condition_break) != 2:
                     raise ImportError("Invalid rule format: %s" % cond_sec)
 
-                c_list.append(_sec_to_particles(feature_pool, condition_break[0]))
-                d_list.append(_sec_to_particles(feature_pool, condition_break[1]))
+                c_part = condition_break[0]
+                d_part = condition_break[1]
 
-            rules.append(Rule(_sec_to_particles(feature_pool, asec), bsec, c_list, d_list))
+                if len(c_part) > 0 and c_part[0] == EDGE_SYMBOL:
+                    c_part = c_part[1:]
+                    c_edge.append(True)
+                else:
+                    c_edge.append(False)
+
+                if len(d_part) > 0 and d_part[-1] == EDGE_SYMBOL:
+                    d_part = d_part[:len(d_part) - 1]
+                    d_edge.append(False)
+                else:
+                    d_edge.append(False)
+
+                c_list.append(_sec_to_particles(feature_pool, c_part))
+                d_list.append(_sec_to_particles(feature_pool, d_part))
+
+            rules.append(Rule(_sec_to_particles(feature_pool, asec), bsec, c_list, c_edge, d_list, d_edge))
     return rules
 
 
-def _sec_to_particles(feature_pool: List[str], sec: str) -> Optional[List[Particle], str]:
+def _sec_to_particles(feature_pool: List[str], sec: str) -> Optional[List[Particle], None]:
     particles = []  # type: List[Particle]
 
     parts = sec.lstrip('[').rstrip(']').split("][")
 
-    if len(parts) == 1 and (parts[0] == EDGE_SYMBOL or parts[0] == NULL_SYMBOL):
-        return parts[0]
+    if len(parts) == 1 and len(parts[0]) == 0:
+        return None
 
     for part in parts:
         features = part.split(",")
