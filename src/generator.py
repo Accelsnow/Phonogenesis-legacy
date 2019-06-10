@@ -56,6 +56,7 @@ class Generator:
                 classify_data = self._rule.classify(word, self._phonemes, feature_to_type, feature_to_sounds)
                 records = []  # type: List[Tuple[ExampleType, Dict[str, List[str]], str, str]]
                 exclusion_lock = False
+                no_irr = False
 
                 for index in range(0, len(classify_data)):
                     data = classify_data[index]
@@ -71,24 +72,31 @@ class Generator:
                     if ExampleType.IRR in data:
                         records.append((ExampleType.IRR, self._IRR[index], data[ExampleType.IRR], word))
                     elif ExampleType.CADT in data:
-                        records = [(ExampleType.CADT, self._CADT[index], data[ExampleType.CADT], word)]
+                        inherited = [r for r in records if r[0] == ExampleType.CADT]
+                        inherited.append((ExampleType.CADT, self._CADT[index], data[ExampleType.CADT], word))
+                        records = inherited
+                        no_irr = True
                         break
 
                     if ExampleType.CADNT in data:
-                        records = [(ExampleType.CADNT, self._CADNT[index], data[ExampleType.CADNT], word)]
+                        inherited = [r for r in records if r[0] == ExampleType.CADNT]
+                        inherited.append((ExampleType.CADNT, self._CADNT[index], data[ExampleType.CADNT], word))
+                        records = inherited
                         exclusion_lock = True
+                        no_irr = True
 
                     if not exclusion_lock:
                         if ExampleType.CAND in data:
                             records.append((ExampleType.CAND, self._CAND[index], data[ExampleType.CAND], word))
+                            no_irr = True
 
                         if ExampleType.NCAD in data:
                             records.append((ExampleType.NCAD, self._NCAD[index], data[ExampleType.NCAD], word))
+                            no_irr = True
 
                         if ExampleType.NCAND in data:
                             records.append((ExampleType.NCAND, self._NCAND[index], data[ExampleType.NCAND], word))
-
-                no_irr = False in [r[0] == ExampleType.IRR for r in records]
+                            no_irr = True
 
                 for record in records:
                     if record[0] != ExampleType.IRR or not no_irr:
