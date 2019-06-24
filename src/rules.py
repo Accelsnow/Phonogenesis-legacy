@@ -56,11 +56,17 @@ class Rule:
             if ExampleType.CADT not in self.classify(word, phonemes, feature_to_type, feature_to_sounds, ):
                 return word
 
-        indexes = self._CADT_lib[word]
+        indexes = list(set(self._CADT_lib[word]))
         new_word = word
+        prev_len = len(new_word)
+        len_diff = 0
 
         for index in indexes:
-            new_word = self._do_replace(new_word, index[0], index[1], feature_to_type, feature_to_sounds)
+            new_word = self._do_replace(new_word, index[0] + len_diff, index[1] + len_diff, feature_to_type,
+                                        feature_to_sounds)
+            new_len = len(new_word)
+            len_diff = new_len - prev_len
+            prev_len = new_len
 
         return new_word
 
@@ -73,8 +79,6 @@ class Rule:
             return [{ExampleType.IRR: ''} for _ in range(0, len(self._Cs))]
         else:
             types_to_sounds = [{} for _ in range(0, len(self._Cs))]  # type: List[Dict[ExampleType, str]]
-            c_matcher, c_size = None, None
-            d_matcher, d_size = None, None
 
             for a_loc in a_locations:
                 a_size = len(a_data[a_loc])
@@ -87,36 +91,34 @@ class Rule:
 
                     is_c = False
 
-                    if c_instance is None:
+                    if c_edge and c_instance is None:
+                        is_c = a_loc == 0
+                    elif not c_edge and c_instance is None:
                         is_c = True
                     else:
-                        if c_matcher is None:
-                            c_matcher = Template(c_instance).generate_word_list(phonemes, None, feature_to_sounds)
-
-                        if c_size is None:
-                            c_size = len(c_matcher[0])
+                        c_matcher = Template(c_instance).generate_word_list(phonemes, None, feature_to_sounds)
+                        c_size = len(c_matcher[0])
 
                         if not c_edge or a_loc - c_size == 0:
-                            for c_pattern in c_matcher:
 
+                            for c_pattern in c_matcher:
                                 if a_loc - c_size >= 0 and word[a_loc - c_size:a_loc] == c_pattern:
                                     is_c = True
                                     break
 
                     is_d = False
 
-                    if d_instance is None:
+                    if d_edge and d_instance is None:
+                        is_d = a_loc + a_size == len(word)
+                    elif not d_edge and d_instance is None:
                         is_d = True
                     else:
-                        if d_matcher is None:
-                            d_matcher = Template(d_instance).generate_word_list(phonemes, None, feature_to_sounds)
-
-                        if d_size is None:
-                            d_size = len(d_matcher[0])
+                        d_matcher = Template(d_instance).generate_word_list(phonemes, None, feature_to_sounds)
+                        d_size = len(d_matcher[0])
 
                         if not d_edge or a_loc + a_size + d_size == len(word):
-                            for d_pattern in d_matcher:
 
+                            for d_pattern in d_matcher:
                                 if a_loc + a_size < len(word) and word[
                                                                   a_loc + a_size:a_loc + a_size + d_size] == d_pattern:
                                     is_d = True
@@ -126,11 +128,13 @@ class Rule:
                     if is_c and is_d:
                         if word != self._do_replace(word, a_loc, a_loc + a_size, feature_to_type, feature_to_sounds):
                             types_to_sounds[i] = {ExampleType.CADT: a_str}
+                            location = (a_loc, a_loc + a_size)
 
+                            # if True not in [location in val for val in self._CADT_lib.values()]:
                             if word in self._CADT_lib:
-                                self._CADT_lib[word].append((a_loc, a_loc + a_size))
+                                self._CADT_lib[word].append(location)
                             else:
-                                self._CADT_lib[word] = [(a_loc, a_loc + a_size)]
+                                self._CADT_lib[word] = [location]
                         elif ExampleType.CADT not in types_to_sounds[i]:
                             types_to_sounds[i] = {ExampleType.CADNT: a_str}
 

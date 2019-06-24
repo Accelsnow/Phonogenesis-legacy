@@ -234,27 +234,27 @@ class Generator:
                 diff = piece_size - sum_num
 
                 while len(cadt_left) > 0 and diff > 0:
-                    cadt_words.append(cadt_left.pop())
+                    cadt_words.append(random.choice(cadt_left))
                     diff -= 1
 
                 while len(cadnt_left) > 0 and diff > 0:
-                    cadnt_words.append(cadnt_left.pop())
+                    cadnt_words.append(random.choice(cadnt_left))
                     diff -= 1
 
                 while len(cand_left) > 0 and diff > 0:
-                    cand_words.append(cand_left.pop())
+                    cand_words.append(random.choice(cand_left))
                     diff -= 1
 
                 while len(ncad_left) > 0 and diff > 0:
-                    ncad_words.append(ncad_left.pop())
+                    ncad_words.append(random.choice(ncad_left))
                     diff -= 1
 
                 while len(ncand_left) > 0 and diff > 0:
-                    ncand_words.append(ncand_left.pop())
+                    ncand_words.append(random.choice(ncand_left))
                     diff -= 1
 
                 while len(irr_left) > 0 and diff > 0:
-                    irr_words.append(irr_left.pop())
+                    irr_words.append(random.choice(irr_left))
                     diff -= 1
 
                 if diff > 0:

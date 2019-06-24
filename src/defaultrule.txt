@@ -1,6 +1,0 @@
-[obstruent]>[voiceless]/_#
-[voiceless,oral stop]>[spread]/#_
-[not spread,fricative]>[voiced]/[vowel]_[vowel]
-[vowel]>[lax]/_[consonant]#&_[consonant][consonant]
-[velar,oral stop]>[postalveolar,affricate]/_[front,vowel]
-<<PREDEFINED>>{'k':'t͡ʃ','g':'d͡ʒ'}/[vowel]_[vowel]
