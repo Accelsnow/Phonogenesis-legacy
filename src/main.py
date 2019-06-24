@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import sys
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from feature_lib import Particle, import_default_features
 from generator import Generator
-from rules import Rule, import_default_rules
+from rules import Rule, RuleFamily, import_default_rules
 from sound import Sound
 from templates import Template, import_default_templates, import_default_phonemes
 
@@ -27,7 +27,15 @@ if __name__ == '__main__':
         print(ti, template)
         ti += 1
 
-    rules = import_default_rules(features)  # type: List[Rule]
+    rule_data = import_default_rules(features)  # type: Tuple[List[RuleFamily], List[Rule]]
+    rule_families = rule_data[0]  # type: List[RuleFamily]
+    rules = rule_data[1]  # type: List[Rule]
+
+    print("\nfull rule families:")
+    fi = 1
+    for family in rule_families:
+        print(fi, family)
+        fi += 1
 
     print("\nfull rules: ")
     ri = 1

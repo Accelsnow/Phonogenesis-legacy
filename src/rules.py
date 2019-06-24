@@ -7,6 +7,8 @@ from feature_lib import Particle
 from sound import Sound
 from templates import Template
 
+import csv
+
 EDGE_SYMBOL = '#'
 
 
@@ -33,10 +35,14 @@ class Rule:
     _CADT_lib: Dict[str, List[Tuple[int, int]]]
     _Cs_edge: List[bool]
     _Ds_edge: List[bool]
+    _name: str
+    _family: RuleFamily
 
-    def __init__(self, a: Optional[List[Particle], None], b: Optional[Particle, str, None],
-                 c: List[Optional[List[Particle], None]], c_edge: List[bool], d: List[Optional[List[Particle], None]],
-                 d_edge: List[bool]) -> None:
+    def __init__(self, name: str, family: RuleFamily, a: Optional[List[Particle], None],
+                 b: Optional[Particle, str, None], c: List[Optional[List[Particle], None]], c_edge: List[bool],
+                 d: List[Optional[List[Particle], None]], d_edge: List[bool]) -> None:
+        self._name = name
+        self._family = family
         self._A = a
         self._B = b
 
@@ -200,7 +206,13 @@ class Rule:
             else:
                 return word
 
-    def __str__(self) -> str:
+    def get_name(self) -> str:
+        return self._name
+
+    def get_family(self) -> RuleFamily:
+        return self._family
+
+    def get_content_str(self) -> str:
         cd_str = ''
 
         for i in range(0, len(self._Cs)):
@@ -231,12 +243,15 @@ class Rule:
         return "%s -> %s / %s" % (
             "".join([str(s) for s in self._A]), str(self._B), cd_str)
 
+    def __str__(self) -> str:
+        return "%s ===== %s" % (self._name, self.get_content_str())
+
 
 class PredefinedRule(Rule):
-    def __init__(self, a_to_b: Dict[str, str],
+    def __init__(self, name: str, family: RuleFamily, a_to_b: Dict[str, str],
                  c: List[Optional[List[Particle], None]], c_edge: List[bool], d: List[Optional[List[Particle], None]],
                  d_edge: List[bool]) -> None:
-        Rule.__init__(self, [], '', c, c_edge, d, d_edge)
+        Rule.__init__(self, name, family, [], '', c, c_edge, d, d_edge)
 
         self._AtoB = a_to_b
 
@@ -247,50 +262,87 @@ class PredefinedRule(Rule):
     def _get_a_matcher(self, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
         return list(self._AtoB.keys())
 
-    def __str__(self) -> str:
+    def get_content_str(self) -> str:
         ab_str = ''
 
         for key in self._AtoB.keys():
             ab_str += "%s > %s, " % (key, self._AtoB[key])
 
         ab_str = ab_str.rstrip(', ')
-        parent_str = Rule.__str__(self)
+        parent_str = Rule.get_content_str(self)
 
         return "<Predefined> {%s} %s" % (ab_str, parent_str[parent_str.index('/'):])
 
 
-def import_default_rules(feature_pool: List[str]) -> List[Rule]:
-    return _fetch_rule_csv(feature_pool, "defaultrule.txt")
+class RuleFamily:
+    _rules: List[Rule]
+    _name: str
+
+    def __init__(self, name: str, default: List[Rule]) -> None:
+        self._rules = default
+        self._name = name
+
+    def add_rule(self, rule: Rule) -> bool:
+        if rule not in self._rules:
+            self._rules.append(rule)
+            return True
+        else:
+            return False
+
+    def get_rules(self) -> List[Rule]:
+        return [r for r in self._rules]
+
+    def get_name(self) -> str:
+        return self._name
+
+    def __str__(self) -> str:
+        return "%s : %s" % (self._name, str([r.get_name() for r in self._rules]))
 
 
-def _fetch_rule_csv(feature_pool: List[str], filename: str) -> List[Rule]:
+def import_default_rules(feature_pool: List[str]) -> Tuple[List[RuleFamily], List[Rule]]:
+    return _fetch_rule_and_family_csv(feature_pool, "defaultrules.csv")
+
+
+def _fetch_rule_and_family_csv(feature_pool: List[str], filename: str) -> Tuple[List[RuleFamily], List[Rule]]:
     import ast
     rules = []  # type: List[Rule]
+    families = {}  # type: Dict[str, RuleFamily]
 
-    with open(filename, encoding='utf-8') as data_file:
-        lines = [l.rstrip('\n') for l in data_file.readlines()]
+    with open(filename, encoding='utf-8', newline='') as data_file:
+        lines = csv.reader(data_file)
 
         for line in lines:
-            if line.startswith('<<PREDEFINED>>'):
+            if len(line) == 0 or len(line[0]) == 0 or line[0] == '' or line[0] == '\ufeff':
+                continue
+
+            family_name = line[2]
+
+            if family_name not in families.keys():
+                families[family_name] = RuleFamily(family_name, [])
+
+            rule_family = families[family_name]
+            rule_name = line[1]
+            rule_content = str(line[0]).strip().strip('\n').strip('\ufeff')
+
+            if rule_content.startswith('<<PREDEFINED>>'):
                 predifined = True
             else:
                 predifined = False
 
-            line = line.lstrip('<<PREDEFINED>>')
+            rule_content = rule_content.lstrip('<<PREDEFINED>>')
 
-            mid_break = line.split("/")
+            mid_break = rule_content.split("/")
 
             cd_info = _interpret_cd(mid_break[1], feature_pool)
 
             if predifined:
-                rules.append(
-                    PredefinedRule(ast.literal_eval(mid_break[0]), cd_info[0], cd_info[1], cd_info[2], cd_info[3]))
-
+                rule = PredefinedRule(rule_name, rule_family, ast.literal_eval(mid_break[0]), cd_info[0], cd_info[1],
+                                      cd_info[2], cd_info[3])
             else:
                 action_break = mid_break[0].split(">")
 
                 if len(action_break) != 2:
-                    raise ImportError("Invalid rule format: %s" % line)
+                    raise ImportError("Invalid rule format: %s" % rule_content)
 
                 asec = action_break[0]
                 bsec = action_break[1]
@@ -301,12 +353,15 @@ def _fetch_rule_csv(feature_pool: List[str], filename: str) -> List[Rule]:
                     bsec = Particle(bsec.lstrip("[").rstrip("]").split(","))
 
                 if len(mid_break) != 2:
-                    raise ImportError("Invalid rule format: %s" % line)
+                    raise ImportError("Invalid rule format: %s" % rule_content)
 
-                rules.append(
-                    Rule(_sec_to_particles(feature_pool, asec), bsec, cd_info[0], cd_info[1], cd_info[2], cd_info[3]))
+                rule = Rule(rule_name, rule_family, _sec_to_particles(feature_pool, asec), bsec, cd_info[0], cd_info[1],
+                            cd_info[2], cd_info[3])
 
-    return rules
+            rule_family.add_rule(rule)
+            rules.append(rule)
+
+    return list(families.values()), rules
 
 
 def _interpret_cd(cd_str: str, feature_pool: List[str]) -> Tuple[

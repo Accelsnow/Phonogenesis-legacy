@@ -1,5 +1,4 @@
-﻿rules,plain name,rule family
-[obstruent]>[voiceless]/_#,word-final obstruent devoicing,consonant devoicing
+﻿[obstruent]>[voiceless]/_#,word-final obstruent devoicing,consonant devoicing
 "[voiceless,oral stop]>[spread]/#_",word-initial aspiration of voiceless stops,aspiration
 "[not spread,fricative]>[voiced]/[vowel]_[vowel]",intervocalic fricative voicing,lenition
 [vowel]>[lax]/_[consonant]#&_[consonant][consonant],vowel laxing in closed syllables,vowel tenseness
@@ -87,18 +86,18 @@
 ,,
 "[velar,consonant]>[uvular,mid]/[back,mid,vowel]_&[back,low,vowel]_",uvularization of velars after back non-high vowels,CV assimilation
 "[velar,consonant]>[uvular,mid]/_[back,mid,vowel]&_[back,low,vowel]",uvularization of velars before back non-high vowels,CV assimilation
-"<<PREDEFINED>>{'l':ɫ'}/_#&_[back,vowel]",velarization of /l/ before back vowels,CV assimilation
-"<<PREDEFINED>>{'l':ɫ'}/_#&[back,vowel]_",velarization of /l/ after back vowels,CV assimilation
+"<<PREDEFINED>>{'l':'ɫ'}/_#&_[back,vowel]",velarization of /l/ before back vowels,CV assimilation
+"<<PREDEFINED>>{'l':'ɫ'}/_#&[back,vowel]_",velarization of /l/ after back vowels,CV assimilation
 "[alveolar,oral stop]>[dental,laminal]/_[front,vowel]",dentalization of alveolar stops before front vowels,CV assimilation
 "[alveolar,oral stop]>[dental,laminal,fricative]/_[front,vowel]",dentalization and spirantization of alveolar stops before front vowels,CV assimilation
-"<<PREDEFINED>>{'d':l'}/_[mid,vowel]&_[low,vowel]",lateralization of /d/ before nonhigh vowels,CV assimilation
-"<<PREDEFINED>>{'d':l'}/[mid,vowel]_&[low,vowel]_",lateralization of /d/ after nonhigh vowels,CV assimilation
+"<<PREDEFINED>>{'d':'l'}/_[mid,vowel]&_[low,vowel]",lateralization of /d/ before nonhigh vowels,CV assimilation
+"<<PREDEFINED>>{'d':'l'}/[mid,vowel]_&[low,vowel]_",lateralization of /d/ after nonhigh vowels,CV assimilation
 "[high,front,vowel]>[central]/[postalveolar]_",retraction of high front vowels after postalveolars,CV assimilation
 "[high,front,vowel]>[central]/[velar]_",retraction of high front vowels after velars,CV assimilation
 "[high,back,vowel]>[central]/[alveolar]_",fronting of high back vowels after alveolars,CV assimilation
 ,,
 "[alveolar,fricative]>[postalveolar,laminal,posterior]/_#",word-final ashibilation of alveolar fricatives,weird
 "[alveolar,fricative]>[postalveolar,laminal,posterior]/_#&_[consonant]",ashibilation of alveolar fricatives in codas,weird
-<<PREDEFINED>>{'r':ɾ'}/_#&_[consonant][consonant],shortening of /r/ in codas,weird
-<<PREDEFINED>>{'s':h'}/_#&_[consonant][consonant],debuccalization of /s/ in codas,weird
-<<PREDEFINED>>{'l':ɫ'}/_#&_[consonant][consonant],velarization of /l/ in codas,weird
+<<PREDEFINED>>{'r':'ɾ'}/_#&_[consonant][consonant],shortening of /r/ in codas,weird
+<<PREDEFINED>>{'s':'h'}/_#&_[consonant][consonant],debuccalization of /s/ in codas,weird
+<<PREDEFINED>>{'l':'ɫ'}/_#&_[consonant][consonant],velarization of /l/ in codas,weird
