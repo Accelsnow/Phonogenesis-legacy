@@ -51,9 +51,11 @@ if __name__ == '__main__':
 
     # while True:
     #     #word = input("\nWord to check: ")
-    #     word = "ðuɡaz"
-    #     print(rules[4].classify(word, phonemes, feature_to_type, feature_to_sounds))
+    #     word = "nipwi"
+    #     print(rules[47].classify(word, phonemes, feature_to_type, feature_to_sounds))
     #     break
+
+    manual_rule_select = 19
 
     if len(sys.argv) > 1:
         use_templates = [templates[int(s) - 1] for s in sys.argv[1].split(",")]
@@ -61,7 +63,7 @@ if __name__ == '__main__':
         amount = int(sys.argv[3])
     else:
         use_templates = templates
-        use_rule = rules[4]
+        use_rule = rules[manual_rule_select]
         amount = 20
 
     print("USING TEMPLATES: ")
@@ -77,7 +79,12 @@ if __name__ == '__main__':
 
     result = gen.generate(amount, feature_to_type, feature_to_sounds)
 
-    print("=============RESULTS================")
+    print("=============INTEREST===============")
+    interest = rules[manual_rule_select].get_interest_phones(phonemes, feature_to_type, feature_to_sounds)
+    print(interest[0])
+    print(interest[1])
+
+    print("\n=============RESULTS================")
     print("UR: ", [str(s) for s in result[0]])
     print("SR: ", [str(s) for s in result[1]])
     print("RULE: ", result[2])

@@ -21,6 +21,9 @@ class Template:
         part_sounds = []
         word_list = set([])
 
+        if word_len == 0:
+            return []
+
         for particle in self._components:
             part_sound = particle.get_matching_sounds(phonemes, feature_to_sounds)
             part_sounds.append(part_sound)
@@ -112,6 +115,6 @@ def _fetch_phoneme(filename: str) -> List[Sound]:
             data = line.split(" ")
 
             for sound_str in data:
-                phonemes.append(Sound('', [])[sound_str])
+                phonemes.append(Sound(-1, '', [])[sound_str])
 
     return phonemes

@@ -29,14 +29,20 @@ class Rule:
     A>B/C_D
     """
     _A: Optional[List[Particle], None]
+    _A_matchers: Dict[int, List[str]]
     _B: Optional[Particle, str, None]
     _Cs: List[Optional[List[Particle], None]]
+    _C_matchers: Dict[int, List[str]]
     _Ds: List[Optional[List[Particle], None]]
+    _D_matchers: Dict[int, List[str]]
+
     _CADT_lib: Dict[str, List[Tuple[int, int]]]
     _Cs_edge: List[bool]
     _Ds_edge: List[bool]
     _name: str
     _family: RuleFamily
+    _environments: List[
+        Tuple[Optional[List[Particle], None], Optional[List[Sound], None], Optional[int, None], Dict[str, List[Sound]]]]
 
     def __init__(self, name: str, family: RuleFamily, a: Optional[List[Particle], None],
                  b: Optional[Particle, str, None], c: List[Optional[List[Particle], None]], c_edge: List[bool],
@@ -44,15 +50,20 @@ class Rule:
         self._name = name
         self._family = family
         self._A = a
+        self._A_matchers = {}
         self._B = b
 
         if len(c) != len(d):
             raise AttributeError("C and D list can not have different length %s _ %s" % (c, d))
 
         self._Cs = c
+        self._C_matchers = {}
         self._Ds = d
+        self._D_matchers = {}
         self._Cs_edge = c_edge
         self._Ds_edge = d_edge
+
+        self._environments = []
 
         self._CADT_lib = {}
 
@@ -102,7 +113,7 @@ class Rule:
                     elif not c_edge and c_instance is None:
                         is_c = True
                     else:
-                        c_matcher = Template(c_instance).generate_word_list(phonemes, None, feature_to_sounds)
+                        c_matcher = self._get_c_matcher(c_instance, phonemes, None, feature_to_sounds)
                         c_size = len(c_matcher[0])
 
                         if not c_edge or a_loc - c_size == 0:
@@ -119,7 +130,7 @@ class Rule:
                     elif not d_edge and d_instance is None:
                         is_d = True
                     else:
-                        d_matcher = Template(d_instance).generate_word_list(phonemes, None, feature_to_sounds)
+                        d_matcher = self._get_d_matcher(d_instance, phonemes, None, feature_to_sounds)
                         d_size = len(d_matcher[0])
 
                         if not d_edge or a_loc + a_size + d_size == len(word):
@@ -154,6 +165,80 @@ class Rule:
 
             return types_to_sounds
 
+    def _get_c_matcher(self, c_instance: Optional[List[Particle], None], phonemes: Optional[List[Sound], None],
+                       size_limit: Optional[int, None], feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
+        dest_env = (c_instance, phonemes, size_limit, feature_to_sounds)
+        match_loc = self._locate_in_env(dest_env, self._C_matchers)
+
+        if match_loc == -1:
+            self._environments.append(dest_env)
+            match_loc = len(self._environments) - 1
+            self._C_matchers[match_loc] = Template(c_instance).generate_word_list(phonemes,
+                                                                                  size_limit,
+                                                                                  feature_to_sounds)
+
+        return self._C_matchers[match_loc]
+
+    def _get_d_matcher(self, d_instance: Optional[List[Particle], None], phonemes: Optional[List[Sound], None],
+                       size_limit: Optional[int, None], feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
+        dest_env = (d_instance, phonemes, size_limit, feature_to_sounds)
+        match_loc = self._locate_in_env(dest_env, self._D_matchers)
+
+        if match_loc == -1:
+            self._environments.append(dest_env)
+            match_loc = len(self._environments) - 1
+            self._D_matchers[match_loc] = Template(d_instance).generate_word_list(phonemes,
+                                                                                  size_limit,
+                                                                                  feature_to_sounds)
+
+        return self._D_matchers[match_loc]
+
+    def _locate_in_env(self, dest_env: Tuple[
+        Optional[List[Particle], None], Optional[List[Sound], None], Optional[int, None], Dict[str, List[Sound]]],
+                       target_matchers: Dict[int, List[str]]):
+        match_loc = -1
+
+        for key in target_matchers.keys():
+            env = self._environments[key]
+
+            if len(env) != len(dest_env):
+                raise ValueError(
+                    "environment tuples should have the same size. ENV %s --- DEST_ENV %s" % (env, dest_env))
+
+            is_match = True
+            for i in range(0, len(env)):
+                if env[i] != dest_env[i]:
+                    is_match = False
+                    break
+
+            if is_match:
+                match_loc = key
+                break
+
+        return match_loc
+
+    def get_interest_phones(self, phonemes: List[Sound], feature_to_type: Dict[str, str],
+                            feature_to_sounds: Dict[str, List[Sound]]) -> Tuple[Dict[str, str], List[str]]:
+        a_matcher = self._get_a_matcher(phonemes, None, feature_to_sounds)
+        result = {}
+        all_phones = set([])
+
+        if len(a_matcher) == 0:
+            raise ValueError("No matching A found in the phonemes!")
+
+        for a_str in a_matcher:
+            if len(a_str) != 1:
+                raise NotImplementedError("Currently only support A of size 1")
+
+            b_str = self._do_replace(a_str, 0, 1, feature_to_type, feature_to_sounds)
+            all_phones.add(a_str)
+            all_phones.add(b_str)
+            result[a_str] = b_str
+
+        all_phones = list(all_phones)
+        all_phones.sort(key=lambda x: Sound(-1, '', [])[x].get_num())
+        return result, all_phones
+
     def locations_a(self, word: str, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> Dict[
         int, str]:
         if self._A is None:
@@ -163,7 +248,7 @@ class Rule:
                 dict_[i] = word[i]
             return dict_
 
-        a_matcher = self._get_a_matcher(phonemes, feature_to_sounds)  # type:List[str]
+        a_matcher = self._get_a_matcher(phonemes, None, feature_to_sounds)  # type:List[str]
         prev_index = 0  # type: int
         result = {}  # type: Dict[int, str]
         i = 0
@@ -186,8 +271,19 @@ class Rule:
 
         return result
 
-    def _get_a_matcher(self, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
-        return Template(self._A).generate_word_list(phonemes, None, feature_to_sounds)
+    def _get_a_matcher(self, phonemes: List[Sound], size_limit: Optional[int, None],
+                       feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
+        dest_env = (self._A, phonemes, size_limit, feature_to_sounds)
+        match_loc = self._locate_in_env(dest_env, self._D_matchers)
+
+        if match_loc == -1:
+            self._environments.append(dest_env)
+            match_loc = len(self._environments) - 1
+            matcher = Template(self._A).generate_word_list(phonemes, size_limit, feature_to_sounds)
+
+            self._A_matchers[match_loc] = matcher
+
+        return self._A_matchers[match_loc]
 
     def _do_replace(self, word: str, begin_index: int, end_index: int, feature_to_type: Dict[str, str],
                     feature_to_sounds: Dict[str, List[Sound]]) -> str:
@@ -199,7 +295,8 @@ class Rule:
             if self._B is None:
                 dest_sound = ''
             else:
-                dest_sound = Sound('', [])[target].get_transformed_sound(self._B, feature_to_type, feature_to_sounds)
+                dest_sound = Sound(-1, '', [])[target].get_transformed_sound(self._B, feature_to_type,
+                                                                             feature_to_sounds)
 
             if dest_sound is not None:
                 return word[:begin_index] + str(dest_sound) + word[end_index:]
@@ -259,7 +356,8 @@ class PredefinedRule(Rule):
                     feature_to_sounds: Dict[str, List[Sound]]) -> str:
         return word[:begin_index] + self._AtoB[word[begin_index:end_index]] + word[end_index:]
 
-    def _get_a_matcher(self, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
+    def _get_a_matcher(self, phonemes: List[Sound], size_limit: Optional[int, None],
+                       feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
         return list(self._AtoB.keys())
 
     def get_content_str(self) -> str:
@@ -322,7 +420,7 @@ def _fetch_rule_and_family_csv(feature_pool: List[str], filename: str) -> Tuple[
 
             rule_family = families[family_name]
             rule_name = line[1]
-            rule_content = str(line[0]).strip().strip('\n').strip('\ufeff')
+            rule_content = str(line[0]).strip().strip('\n').strip('\ufeff').replace('g', 'ɡ')
 
             if rule_content.startswith('<<PREDEFINED>>'):
                 predifined = True

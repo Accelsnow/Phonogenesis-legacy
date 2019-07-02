@@ -6,17 +6,20 @@ _SYMBOL = {}  # type: Dict[str, Sound]
 
 
 class Sound:
+    _num: int
     _features: List[str]
     _symbol: str
 
-    def __init__(self, symbol: str, features: List[str]) -> None:
+    def __init__(self, num: int, symbol: str, features: List[str]) -> None:
+        self._num = num
         self._features = features
         self._symbol = symbol
 
-        if symbol in _SYMBOL.keys() and symbol != '':
+        if symbol in _SYMBOL.keys():
             raise ValueError("Duplicated symbol not allowed!")
 
-        _SYMBOL[symbol] = self
+        if num >= 1 and symbol != '':
+            _SYMBOL[symbol] = self
 
     def get_features(self) -> List[str]:
         return [f for f in self._features]
@@ -30,7 +33,7 @@ class Sound:
 
         if not isinstance(target_particle, Particle):
             raise AttributeError("target particle must be a Particle")
-        
+
         types = [feature_to_type[f] for f in target_particle.get_features()]
 
         for sound in target_particle.get_matching_sounds(None, feature_to_sounds):
@@ -50,8 +53,32 @@ class Sound:
 
         return None
 
+    def get_num(self) -> int:
+        return self._num
+
+    def __hash__(self) -> int:
+        return self._num
+
     def __getitem__(self, item: str) -> Sound:
         return _SYMBOL[item]
 
     def __str__(self) -> str:
         return self._symbol
+
+    def __eq__(self, other: Sound) -> bool:
+        return self._num == other.get_num()
+
+    def __ne__(self, other: Sound) -> bool:
+        return self._num != other.get_num()
+
+    def __lt__(self, other: Sound) -> bool:
+        return self._num < other.get_num()
+
+    def __le__(self, other: Sound) -> bool:
+        return self._num <= other.get_num()
+
+    def __gt__(self, other: Sound) -> bool:
+        return self._num > other.get_num()
+
+    def __ge__(self, other: Sound) -> bool:
+        return self._num >= other.get_num()

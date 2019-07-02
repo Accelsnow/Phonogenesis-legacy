@@ -76,6 +76,7 @@ def _fetch_feature_csv(filename: str) -> Tuple[
     with open(filename, encoding='utf-8') as data_file:
         lines = csv.reader(data_file)
         header_solved = False
+        sound_num = 1
 
         for line in lines:
             if len(line) == 0 or len(line[0]) == 0 or line[0] == '' or line[0] == '\ufeff':
@@ -101,7 +102,8 @@ def _fetch_feature_csv(filename: str) -> Tuple[
             if len(features_) != len(feature_types):
                 raise ImportError("Feature line \'%s\' does not align with types" % str(features_))
 
-            _sound = Sound(line[0], features_)
+            _sound = Sound(sound_num, str(line[0]).replace('g', 'ɡ'), features_)
+            sound_num += 1
 
             if Particle(features_) in features_to_sound.keys():
                 raise ImportError(
