@@ -72,16 +72,17 @@ class Template:
 
 
 def import_default_templates(feature_pool: List[str]) -> List[Template]:
-    return _fetch_template_csv("defaulttemplate.txt", feature_pool)
+    return _fetch_templates("defaulttemplate.txt", feature_pool)
 
 
-def _fetch_template_csv(filename: str, feature_pool: List[str]) -> List[Template]:
+def _fetch_templates(filename: str, feature_pool: List[str]) -> List[Template]:
     templates = []  # type: List[Template]
 
     with open(filename, encoding='utf-8') as data_file:
         lines = [l.rstrip('\n') for l in data_file.readlines()]
 
         for line in lines:
+            line = line.replace('g', 'ɡ')
             particle_list = line.split("-")
             particles = []
 
@@ -112,9 +113,10 @@ def _fetch_phoneme(filename: str) -> List[Sound]:
         lines = [l.rstrip('\n') for l in data_file.readlines()]
 
         for line in lines:
+            line = line.replace('g', 'ɡ')
             data = line.split(" ")
 
             for sound_str in data:
-                phonemes.append(Sound(-1, '', [])[sound_str])
+                phonemes.append(Sound(-1, '', [])[str(sound_str)])
 
     return phonemes

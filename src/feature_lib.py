@@ -82,6 +82,8 @@ def _fetch_feature_csv(filename: str) -> Tuple[
             if len(line) == 0 or len(line[0]) == 0 or line[0] == '' or line[0] == '\ufeff':
                 continue
 
+            line = [str(s).replace('g', 'ɡ') for s in line]
+
             if line[0] == "[TL]":
                 if header_solved:
                     raise ImportError("Duplicate [TL] header found")
@@ -89,7 +91,7 @@ def _fetch_feature_csv(filename: str) -> Tuple[
                 feature_types = line[1:line.index('', 1)]
 
                 for type_ in feature_types:
-                    type_to_features[type_] = []
+                    type_to_features[str(type_)] = []
 
                 header_solved = True
                 continue
@@ -102,7 +104,7 @@ def _fetch_feature_csv(filename: str) -> Tuple[
             if len(features_) != len(feature_types):
                 raise ImportError("Feature line \'%s\' does not align with types" % str(features_))
 
-            _sound = Sound(sound_num, str(line[0]).replace('g', 'ɡ'), features_)
+            _sound = Sound(sound_num, str(line[0]), features_)
             sound_num += 1
 
             if Particle(features_) in features_to_sound.keys():
@@ -113,7 +115,7 @@ def _fetch_feature_csv(filename: str) -> Tuple[
             sounds.append(_sound)
 
             for i in range(0, len(features_)):
-                feature_ = features_[i]
+                feature_ = str(features_[i])
                 type_ = feature_types[i]
 
                 if feature_ not in feature_to_type.keys():

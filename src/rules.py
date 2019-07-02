@@ -413,6 +413,8 @@ def _fetch_rule_and_family_csv(feature_pool: List[str], filename: str) -> Tuple[
             if len(line) == 0 or len(line[0]) == 0 or line[0] == '' or line[0] == '\ufeff':
                 continue
 
+            line = [str(s).replace('g', 'ɡ') for s in line]
+
             family_name = line[2]
 
             if family_name not in families.keys():
@@ -420,7 +422,7 @@ def _fetch_rule_and_family_csv(feature_pool: List[str], filename: str) -> Tuple[
 
             rule_family = families[family_name]
             rule_name = line[1]
-            rule_content = str(line[0]).strip().strip('\n').strip('\ufeff').replace('g', 'ɡ')
+            rule_content = str(line[0]).strip().strip('\n').strip('\ufeff')
 
             if rule_content.startswith('<<PREDEFINED>>'):
                 predifined = True

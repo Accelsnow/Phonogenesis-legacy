@@ -5,6 +5,7 @@ from typing import List, Dict, Tuple
 
 from feature_lib import Particle, import_default_features
 from generator import Generator
+import random
 from rules import Rule, RuleFamily, import_default_rules
 from sound import Sound
 from templates import Template, import_default_templates, import_default_phonemes
@@ -49,48 +50,48 @@ if __name__ == '__main__':
 
     print("\n==================================================\n")
 
-    # while True:
-    #     #word = input("\nWord to check: ")
-    #     word = "nipwi"
-    #     print(rules[47].classify(word, phonemes, feature_to_type, feature_to_sounds))
-    #     break
+    manual_rule_select = 27
 
-    manual_rule_select = 19
+    while True:
+        # word = input("\nWord to check: ")
+        word = "ki"
+        print(rules[manual_rule_select].classify(word, phonemes, feature_to_type, feature_to_sounds))
+        break
 
-    if len(sys.argv) > 1:
-        use_templates = [templates[int(s) - 1] for s in sys.argv[1].split(",")]
-        use_rule = rules[int(sys.argv[2]) - 1]
-        amount = int(sys.argv[3])
-    else:
-        use_templates = templates
-        use_rule = rules[manual_rule_select]
-        amount = 20
-
-    print("USING TEMPLATES: ")
-    ti = 1
-    for template in use_templates:
-        print(ti, template)
-        ti += 1
-
-    print("\nUSING RULE: ", use_rule)
-    print("\nGENERATION AMOUNT:", amount, '\n')
-
-    gen = Generator(phonemes, use_templates, use_rule, 5, feature_to_type, feature_to_sounds)
-
-    result = gen.generate(amount, feature_to_type, feature_to_sounds)
-
-    print("=============INTEREST===============")
-    interest = rules[manual_rule_select].get_interest_phones(phonemes, feature_to_type, feature_to_sounds)
-    print(interest[0])
-    print(interest[1])
-
-    print("\n=============RESULTS================")
-    print("UR: ", [str(s) for s in result[0]])
-    print("SR: ", [str(s) for s in result[1]])
-    print("RULE: ", result[2])
-    print("TEMPLATES: ")
-    for t in [str(s) for s in result[3]]:
-        print(t)
+    # if len(sys.argv) > 1:
+    #     use_templates = [templates[int(s) - 1] for s in sys.argv[1].split(",")]
+    #     use_rule = rules[int(sys.argv[2]) - 1]
+    #     amount = int(sys.argv[3])
+    # else:
+    #     use_templates = templates
+    #     use_rule = rules[manual_rule_select]
+    #     amount = 20
+    #
+    # print("USING TEMPLATES: ")
+    # ti = 1
+    # for template in use_templates:
+    #     print(ti, template)
+    #     ti += 1
+    #
+    # print("\nUSING RULE: ", use_rule)
+    # print("\nGENERATION AMOUNT:", amount, '\n')
+    #
+    # gen = Generator(phonemes, use_templates, use_rule, 5, feature_to_type, feature_to_sounds)
+    #
+    # result = gen.generate(amount, feature_to_type, feature_to_sounds)
+    #
+    # print("=============INTEREST===============")
+    # interest = rules[manual_rule_select].get_interest_phones(phonemes, feature_to_type, feature_to_sounds)
+    # print(interest[0])
+    # print(interest[1])
+    #
+    # print("\n=============RESULTS================")
+    # print("UR: ", [str(s) for s in result[0]])
+    # print("SR: ", [str(s) for s in result[1]])
+    # print("RULE: ", result[2])
+    # print("TEMPLATES: ")
+    # for t in [str(s) for s in result[3]]:
+    #     print(t)
 
     #
     # print(sounds[0].get_transformed_sound(Particle(["voiced"]), feature_to_type, feature_to_sounds))
@@ -99,3 +100,33 @@ if __name__ == '__main__':
     # # print(templates[0].generate_word_list(feature_to_sounds))
     # #
     # print(rules[0].apply("aba", feature_to_type, feature_to_sounds))
+
+
+def random_select(families: List[RuleFamily], rules_: List[Rule], family_num: int, rule_num: int) -> List[Rule]:
+    if family_num > rule_num:
+        raise AttributeError("family num larger than rule num")
+
+    if len(families) < family_num:
+        raise AttributeError("num greater than family size")
+
+    if len(rules_) < rule_num:
+        raise AttributeError("num greater than rule size")
+
+    chosen_family = random.choices(families, k=family_num)  # type: List[RuleFamily]
+    rules_pool = [family_.get_rules() for family_ in chosen_family]
+    random_result = []
+
+    while rule_num > 0:
+        for pool in rules_pool:
+            if rule_num <= 0:
+                break
+
+            if len(pool) == 0:
+                continue
+
+            chosen = random.choice(pool)  # type: Rule
+            pool.remove(chosen)
+            random_result.append(chosen)
+            rule_num -= 1
+
+    return random_result

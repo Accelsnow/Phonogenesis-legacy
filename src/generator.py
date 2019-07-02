@@ -205,9 +205,10 @@ class Generator:
             return vals, []
 
     def generate(self, amount: int, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> \
-            Tuple[List[str], List[str], Rule, List[Template]]:
+            Tuple[List[str], List[str], Rule, List[Template], List[int]]:
         underlying_rep = []  # type: List[str]
         surface_rep = []  # type: List[str]
+        generation_amounts = [0, 0, 0, 0, 0, 0]  # type: List[int]
         split_size = len(self._CADT)
         piece_size = round(amount / split_size)
 
@@ -261,8 +262,14 @@ class Generator:
                     warnings.warn("CRITICAL WARNING: No available word left in any category. (%d missing)" % diff)
 
             print("\nActual Number:", "CADT", len(cadt_words), "CADNT", len(cadnt_words), "CAND", len(cand_words),
-                  "NCAD",
-                  len(ncad_words), "NCAND", len(ncand_words), "IRR", len(irr_words))
+                  "NCAD", len(ncad_words), "NCAND", len(ncand_words), "IRR", len(irr_words))
+            generation_amounts[0] += len(cadt_words)
+            generation_amounts[1] += len(cadnt_words)
+            generation_amounts[2] += len(cand_words)
+            generation_amounts[3] += len(ncad_words)
+            generation_amounts[4] += len(ncand_words)
+            generation_amounts[5] += len(irr_words)
+
             # random.shuffle(underlying_rep)
 
             underlying_rep.extend(cadt_words)
@@ -275,4 +282,4 @@ class Generator:
         for word in underlying_rep:
             surface_rep.append(self._rule.apply(word, self._phonemes, feature_to_type, feature_to_sounds))
 
-        return underlying_rep, surface_rep, self._rule, self._templates
+        return underlying_rep, surface_rep, self._rule, self._templates, generation_amounts
