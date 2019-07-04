@@ -42,7 +42,8 @@ if __name__ == '__main__':
             amounts = [str(i) for i in result[4]]
         except:
             success = False
-            data.extend([sys.exc_info()[0] for _ in range(0, 5)])
+            info = sys.exc_info()[0]
+            data.extend([info for _ in range(0, 5)])
             data.append("ERROR")
 
         if success:

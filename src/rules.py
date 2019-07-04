@@ -413,7 +413,7 @@ def _fetch_rule_and_family_csv(feature_pool: List[str], filename: str) -> Tuple[
             if len(line) == 0 or len(line[0]) == 0 or line[0] == '' or line[0] == '\ufeff':
                 continue
 
-            line = [str(s).replace('g', 'ɡ') for s in line]
+            line = [str(s).replace('ɡ', 'g') for s in line]
 
             family_name = line[2]
 

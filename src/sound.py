@@ -34,24 +34,50 @@ class Sound:
         if not isinstance(target_particle, Particle):
             raise AttributeError("target particle must be a Particle")
 
-        types = [feature_to_type[f] for f in target_particle.get_features()]
+        specified_types = [feature_to_type[f] for f in target_particle.get_features()]
+
+        loose_match = []  # type: List[Sound]
+        tight_match = []  # type: List[Sound]
 
         for sound in target_particle.get_matching_sounds(None, feature_to_sounds):
             target_features = sound.get_features()
             passed = True
+            is_loose = False
 
             for i in range(0, len(self._features)):
                 target_feature = target_features[i]
                 this_feature = self._features[i]
 
-                if feature_to_type[target_feature] not in types and target_feature != this_feature:
-                    passed = False
-                    break
+                if feature_to_type[target_feature] not in specified_types:
+                    if target_feature != this_feature:
+                        if target_feature == 'NA' or this_feature == 'NA':
+                            is_loose = True
+                        else:
+                            passed = False
+                            break
 
             if passed:
-                return sound
+                if is_loose:
+                    loose_match.append(sound)
+                else:
+                    tight_match.append(sound)
 
-        return None
+        if len(loose_match) == 0 and len(tight_match) == 0:
+            return None
+
+        if len(tight_match) > 1:
+            raise ValueError("multiple tight matches!! %s" % [str(s) for s in tight_match])
+
+        if len(tight_match) == 1:
+            return tight_match[0]
+
+        if len(loose_match) > 1:
+            raise ValueError("multiple loose matches found %s" % [str(s) for s in loose_match])
+
+        if len(loose_match) == 1:
+            return loose_match[0]
+
+        raise EOFError("cant reach this line")
 
     def get_num(self) -> int:
         return self._num

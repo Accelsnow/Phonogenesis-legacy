@@ -82,7 +82,7 @@ def _fetch_templates(filename: str, feature_pool: List[str]) -> List[Template]:
         lines = [l.rstrip('\n') for l in data_file.readlines()]
 
         for line in lines:
-            line = line.replace('g', 'ɡ')
+            line = line.replace('ɡ', 'g')
             particle_list = line.split("-")
             particles = []
 
@@ -113,7 +113,7 @@ def _fetch_phoneme(filename: str) -> List[Sound]:
         lines = [l.rstrip('\n') for l in data_file.readlines()]
 
         for line in lines:
-            line = line.replace('g', 'ɡ')
+            line = line.replace('ɡ', 'g')
             data = line.split(" ")
 
             for sound_str in data:
