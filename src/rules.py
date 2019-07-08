@@ -30,7 +30,7 @@ class Rule:
     """
     _A: Optional[List[Particle], None]
     _A_matchers: Dict[int, List[str]]
-    _B: Optional[Particle, str, None]
+    _B: Optional[Tuple[Particle, List[str]], None]
     _Cs: List[Optional[List[Particle], None]]
     _C_matchers: Dict[int, List[str]]
     _Ds: List[Optional[List[Particle], None]]
@@ -45,8 +45,8 @@ class Rule:
         Tuple[Optional[List[Particle], None], Optional[List[Sound], None], Optional[int, None], Dict[str, List[Sound]]]]
 
     def __init__(self, name: str, family: RuleFamily, a: Optional[List[Particle], None],
-                 b: Optional[Particle, str, None], c: List[Optional[List[Particle], None]], c_edge: List[bool],
-                 d: List[Optional[List[Particle], None]], d_edge: List[bool]) -> None:
+                 b: Optional[Tuple[Particle, List[str]], None], c: List[Optional[List[Particle], None]],
+                 c_edge: List[bool], d: List[Optional[List[Particle], None]], d_edge: List[bool]) -> None:
         self._name = name
         self._family = family
         self._A = a
@@ -289,19 +289,19 @@ class Rule:
                     feature_to_sounds: Dict[str, List[Sound]]) -> str:
         target = word[begin_index:end_index]
 
-        if isinstance(self._B, str):
-            raise NotImplementedError
+        if self._B is None:
+            dest_sound = ''
         else:
-            if self._B is None:
-                dest_sound = ''
-            else:
-                dest_sound = Sound(-1, '', [])[target].get_transformed_sound(self._B, feature_to_type,
-                                                                             feature_to_sounds)
+            dest_particle = self._B[0]
+            ignored_types = self._B[1]
 
-            if dest_sound is not None:
-                return word[:begin_index] + str(dest_sound) + word[end_index:]
-            else:
-                return word
+            dest_sound = Sound(-1, '', [])[target].get_transformed_sound(dest_particle, ignored_types, feature_to_type,
+                                                                         feature_to_sounds)
+
+        if dest_sound is not None:
+            return word[:begin_index] + str(dest_sound) + word[end_index:]
+        else:
+            return word
 
     def get_name(self) -> str:
         return self._name
@@ -310,6 +310,11 @@ class Rule:
         return self._family
 
     def get_content_str(self) -> str:
+        if self._B is None:
+            b_str = ''
+        else:
+            b_str = "%s,%s" % (str(self._B[0]), str(self._B[1]))
+
         cd_str = ''
 
         for i in range(0, len(self._Cs)):
@@ -338,7 +343,7 @@ class Rule:
             cd_str += part
 
         return "%s -> %s / %s" % (
-            "".join([str(s) for s in self._A]), str(self._B), cd_str)
+            "".join([str(s) for s in self._A]), b_str, cd_str)
 
     def __str__(self) -> str:
         return "%s ===== %s" % (self._name, self.get_content_str())
@@ -348,7 +353,7 @@ class PredefinedRule(Rule):
     def __init__(self, name: str, family: RuleFamily, a_to_b: Dict[str, str],
                  c: List[Optional[List[Particle], None]], c_edge: List[bool], d: List[Optional[List[Particle], None]],
                  d_edge: List[bool]) -> None:
-        Rule.__init__(self, name, family, [], '', c, c_edge, d, d_edge)
+        Rule.__init__(self, name, family, [], None, c, c_edge, d, d_edge)
 
         self._AtoB = a_to_b
 
@@ -410,7 +415,7 @@ def _fetch_rule_and_family_csv(feature_pool: List[str], filename: str) -> Tuple[
         lines = csv.reader(data_file)
 
         for line in lines:
-            if len(line) == 0 or len(line[0]) == 0 or line[0] == '' or line[0] == '\ufeff':
+            if len(line) == 0 or len(line[0]) == 0 or line[0] == '' or str(line[0]).startswith('\ufeff'):
                 continue
 
             line = [str(s).replace('ɡ', 'g') for s in line]
@@ -444,24 +449,43 @@ def _fetch_rule_and_family_csv(feature_pool: List[str], filename: str) -> Tuple[
                 if len(action_break) != 2:
                     raise ImportError("Invalid rule format: %s" % rule_content)
 
-                asec = action_break[0]
-                bsec = action_break[1]
+                a_sec = action_break[0]
+                b_str = action_break[1]
 
-                if len(bsec) == 0:
-                    bsec = None
-                elif bsec[0] == '[' and bsec[-1] == ']':
-                    bsec = Particle(bsec.lstrip("[").rstrip("]").split(","))
+                if len(b_str) == 0:
+                    b_sec = None
+                elif b_str[0] == '[' and b_str[-1] == ']':
+                    b_sec = _interpret_b(b_str, feature_pool)
+                else:
+                    raise ValueError("error reading b data invalid format %s" % b_str)
 
                 if len(mid_break) != 2:
                     raise ImportError("Invalid rule format: %s" % rule_content)
 
-                rule = Rule(rule_name, rule_family, _sec_to_particles(feature_pool, asec), bsec, cd_info[0], cd_info[1],
-                            cd_info[2], cd_info[3])
+                rule = Rule(rule_name, rule_family, _sec_to_particles(feature_pool, a_sec), b_sec, cd_info[0],
+                            cd_info[1], cd_info[2], cd_info[3])
 
             rule_family.add_rule(rule)
             rules.append(rule)
 
     return list(families.values()), rules
+
+
+def _interpret_b(b_str: str, feature_pool: List[str]) -> Tuple[Particle, List[str]]:
+    b_data = b_str.lstrip("[").rstrip("]").split(",")
+    particle_data = []  # type: List[str]
+    ignored_types = []  # type: List[str]
+
+    for data in b_data:
+        if data.startswith("(") and data.endswith(")"):
+            ignored_types.append(data.lstrip("(").rstrip(")"))
+        else:
+            if data not in feature_pool:
+                raise ValueError("error reading b data, particle \"%s\" is undefined in %s" % (data, b_str))
+
+            particle_data.append(data)
+
+    return Particle(particle_data), ignored_types
 
 
 def _interpret_cd(cd_str: str, feature_pool: List[str]) -> Tuple[

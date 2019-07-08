@@ -27,7 +27,7 @@ class Sound:
     def get_symbol(self) -> str:
         return self._symbol
 
-    def get_transformed_sound(self, target_particle: Any, feature_to_type: Dict[str, str],
+    def get_transformed_sound(self, target_particle: Any, ignored_types: List[str], feature_to_type: Dict[str, str],
                               feature_to_sounds: Dict[str, List[Sound]]) -> Optional[Sound, None]:
         from feature_lib import Particle
 
@@ -48,7 +48,9 @@ class Sound:
                 target_feature = target_features[i]
                 this_feature = self._features[i]
 
-                if feature_to_type[target_feature] not in specified_types:
+                target_type = feature_to_type[target_feature]
+
+                if target_type not in specified_types and target_type not in ignored_types:
                     if target_feature != this_feature:
                         if target_feature == 'NA' or this_feature == 'NA':
                             is_loose = True

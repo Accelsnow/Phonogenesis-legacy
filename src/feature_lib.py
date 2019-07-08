@@ -88,7 +88,10 @@ def _fetch_feature_csv(filename: str) -> Tuple[
                 if header_solved:
                     raise ImportError("Duplicate [TL] header found")
 
-                feature_types = line[1:line.index('', 1)]
+                if line.count('') > 0:
+                    feature_types = line[1:line.index('', 1)]
+                else:
+                    feature_types = line[1:]
 
                 for type_ in feature_types:
                     type_to_features[str(type_)] = []
@@ -99,7 +102,10 @@ def _fetch_feature_csv(filename: str) -> Tuple[
             if not header_solved:
                 raise ImportError("File does not start with header line begins with [TL]")
 
-            features_ = line[1:line.index('', 1)]
+            if line.count('') > 0:
+                features_ = line[1:line.index('', 1)]
+            else:
+                features_ = line[1:]
 
             if len(features_) != len(feature_types):
                 raise ImportError("Feature line \'%s\' does not align with types" % str(features_))
