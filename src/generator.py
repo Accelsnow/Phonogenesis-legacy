@@ -8,6 +8,8 @@ from rules import Rule, ExampleType
 from sound import Sound
 from templates import Template
 
+from glossgroup import GlossGroup
+
 WORD_LIST_SIZE_LIMIT = 1000
 
 EXCLUSION_TYPES = [ExampleType.CADT, ExampleType.CADNT]
@@ -204,17 +206,17 @@ class Generator:
             warnings.warn("Insufficient amount of %s type.(%d required, %d found)" % (name, amount, len(vals)))
             return vals, []
 
-    def generate(self, amount: int, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> \
-            Tuple[List[str], List[str], Rule, List[Template], List[int]]:
-        underlying_rep = []  # type: List[str]
-        surface_rep = []  # type: List[str]
+    def generate(self, amount: int, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]],
+                 gloss_groups: List[GlossGroup]) -> Tuple[List[str], List[str], Rule, List[Template], List[int]]:
+        ur_words = []  # type: List[str]
+        sr_words = []  # type: List[str]
         generation_amounts = [0, 0, 0, 0, 0, 0]  # type: List[int]
         split_size = len(self._CADT)
         piece_size = round(amount / split_size)
 
         for index in range(0, split_size):
             if index == split_size - 1:
-                piece_size = amount - len(underlying_rep)
+                piece_size = amount - len(ur_words)
 
             cadt_num, cadnt_num, cand_num, ncad_num, ncand_num, irr_num = self._get_num(piece_size)
 
@@ -271,15 +273,21 @@ class Generator:
             generation_amounts[5] += len(irr_words)
 
             # random.shuffle(underlying_rep)
+            ur_words.extend(cadt_words)
+            ur_words.extend(cadnt_words)
+            ur_words.extend(cand_words)
+            ur_words.extend(ncad_words)
+            ur_words.extend(ncand_words)
+            ur_words.extend(irr_words)
 
-            underlying_rep.extend(cadt_words)
-            underlying_rep.extend(cadnt_words)
-            underlying_rep.extend(cand_words)
-            underlying_rep.extend(ncad_words)
-            underlying_rep.extend(ncand_words)
-            underlying_rep.extend(irr_words)
+        for word in ur_words:
+            sr_words.append(self._rule.apply(word, self._phonemes, feature_to_type, feature_to_sounds))
 
-        for word in underlying_rep:
-            surface_rep.append(self._rule.apply(word, self._phonemes, feature_to_type, feature_to_sounds))
+        size = len(ur_words)
+
+        gloss_words = [w.pick() for w in random.sample(gloss_groups, size)]
+
+        underlying_rep = ["%s '%s'" % (ur_words[i], gloss_words[i]) for i in range(0, size)]
+        surface_rep = ["%s '%s'" % (sr_words[i], gloss_words[i]) for i in range(0, size)]
 
         return underlying_rep, surface_rep, self._rule, self._templates, generation_amounts

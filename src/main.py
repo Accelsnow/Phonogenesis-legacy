@@ -8,6 +8,7 @@ from generator import Generator
 import random
 from rules import Rule, RuleFamily, import_default_rules
 from sound import Sound
+from glossgroup import GlossGroup, GlossFamily, import_default_gloss
 from templates import Template, import_default_templates, import_default_phonemes
 
 if __name__ == '__main__':
@@ -48,6 +49,13 @@ if __name__ == '__main__':
 
     print("\nfull phonemes: ", [str(p) for p in phonemes])
 
+    gloss_data = import_default_gloss()
+    gloss_families = gloss_data[0]
+    gloss_groups = gloss_data[1]
+
+    print("\nfull gloss families: ", [str(f) + "\n" for f in gloss_families])
+    print("\nfull gloss groups: ", [str(g) + "\n" for g in gloss_groups])
+
     print("\n==================================================\n")
 
     manual_rule_select = 46
@@ -78,7 +86,7 @@ if __name__ == '__main__':
 
     gen = Generator(phonemes, use_templates, use_rule, 5, feature_to_type, feature_to_sounds)
 
-    result = gen.generate(amount, feature_to_type, feature_to_sounds)
+    result = gen.generate(amount, feature_to_type, feature_to_sounds, gloss_groups)
 
     print("=============INTEREST===============")
     interest = rules[manual_rule_select].get_interest_phones(phonemes, feature_to_type, feature_to_sounds)
