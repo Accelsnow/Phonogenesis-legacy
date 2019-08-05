@@ -535,7 +535,7 @@ def _sec_to_particles(feature_pool: List[str], sec: str) -> Optional[List[Partic
         features = part.split(",")
 
         for feature in features:
-            if feature not in feature_pool:
+            if feature.lstrip("!") not in feature_pool:
                 raise ImportError("Rule sector %s does not conform to the given features." % sec)
 
         particles.append(Particle(features))

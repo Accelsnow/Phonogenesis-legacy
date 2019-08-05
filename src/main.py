@@ -8,7 +8,7 @@ from generator import Generator
 import random
 from rules import Rule, RuleFamily, import_default_rules
 from sound import Sound
-from glossgroup import GlossGroup, GlossFamily, import_default_gloss
+from glossgroup import import_default_gloss
 from templates import Template, import_default_templates, import_default_phonemes
 
 if __name__ == '__main__':
@@ -58,48 +58,52 @@ if __name__ == '__main__':
 
     print("\n==================================================\n")
 
-    manual_rule_select = 75
+    manual_rule_select = 0
 
-    # while True:
-    #     # word = input("\nWord to check: ")
-    #     word = "fab"
-    #     print(rules[manual_rule_select].classify(word, phonemes, feature_to_type, feature_to_sounds))
-    #     break
+    while True:
+        # word = input("\nWord to check: ")
+        word = ""
+        print(rules[manual_rule_select].classify(word, phonemes, feature_to_type, feature_to_sounds))
+        break
 
-    if len(sys.argv) > 1:
-        use_templates = [templates[int(s) - 1] for s in sys.argv[1].split(",")]
-        use_rule = rules[int(sys.argv[2]) - 1]
-        amount = int(sys.argv[3])
-    else:
-        use_templates = templates
-        use_rule = rules[manual_rule_select]
-        amount = 20
+    # if len(sys.argv) > 1:
+    #     use_templates = [templates[int(s) - 1] for s in sys.argv[1].split(",")]
+    #     use_rule = rules[int(sys.argv[2]) - 1]
+    #     amount = int(sys.argv[3])
+    # else:
+    #     use_templates = templates
+    #     use_rule = rules[manual_rule_select]
+    #     amount = 20
+    #
+    # print("USING TEMPLATES: ")
+    # ti = 1
+    # for template in use_templates:
+    #     print(ti, template)
+    #     ti += 1
+    #
+    # print("\nUSING RULE: ", use_rule)
+    # print("\nGENERATION AMOUNT:", amount, '\n')
 
-    print("USING TEMPLATES: ")
-    ti = 1
-    for template in use_templates:
-        print(ti, template)
-        ti += 1
-
-    print("\nUSING RULE: ", use_rule)
-    print("\nGENERATION AMOUNT:", amount, '\n')
-
-    gen = Generator(phonemes, use_templates, use_rule, 5, feature_to_type, feature_to_sounds)
-
-    result = gen.generate(amount, feature_to_type, feature_to_sounds, gloss_groups)
-
-    print("=============INTEREST===============")
-    interest = rules[manual_rule_select].get_interest_phones(phonemes, feature_to_type, feature_to_sounds)
-    print(interest[0])
-    print(interest[1])
-
-    print("\n=============RESULTS================")
-    print("UR: ", [str(s) for s in result[0]])
-    print("SR: ", [str(s) for s in result[1]])
-    print("RULE: ", result[2])
-    print("TEMPLATES: ")
-    for t in [str(s) for s in result[3]]:
-        print(t)
+    # gen = Generator(phonemes, use_templates, use_rule, 5, feature_to_type, feature_to_sounds)
+    #
+    # is_fresh = True
+    # for _ in range(0, 1):
+    #     result = gen.generate(amount, is_fresh, feature_to_type, feature_to_sounds, gloss_groups)
+    #
+    #     print("=============INTEREST===============")
+    #     interest = rules[manual_rule_select].get_interest_phones(phonemes, feature_to_type, feature_to_sounds)
+    #     print(interest[0])
+    #     print(interest[1])
+    #
+    #     print("\n=============RESULTS================")
+    #     print("UR: ", ["%s '%s'" % (s[0], s[1]) for s in result[0]])
+    #     print("SR: ", ["%s '%s'" % (s[0], s[1]) for s in result[1]])
+    #     print("RULE: ", result[2])
+    #     print("TEMPLATES: ")
+    #     for t in [str(s) for s in result[3]]:
+    #         print(t)
+    #
+    #     is_fresh = False
 
     # sample template gen
     # print(templates[0].generate_word_list(feature_to_sounds))

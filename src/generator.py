@@ -27,6 +27,7 @@ class Generator:
     _NCAD: List[Dict[str, List[str]]]
     _NCAND: List[Dict[str, List[str]]]
     _IRR: List[Dict[str, List[str]]]
+    _duplicate_exclusion: List[str]
 
     def __init__(self, phonemes: List[Sound], templates: List[Template], rule: Rule, difficulty: int,
                  feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> None:
@@ -39,6 +40,7 @@ class Generator:
         self._NCAND = []
         self._IRR = []
         self._phonemes = phonemes
+        self._duplicate_exclusion = []
 
         self._difficulty_to_percent = {
             5: (0.32, 0.08, 0.175, 0.175, 0.05, 0.2)
@@ -153,8 +155,7 @@ class Generator:
 
         return existed
 
-    @staticmethod
-    def _generate_words(amount: int, dic: Dict[str, List[str]]) -> List[str]:
+    def _generate_words(self, amount: int, dic: Dict[str, List[str]]) -> List[str]:
         if amount == 0:
             return []
 
@@ -177,7 +178,7 @@ class Generator:
                 if curr_index < len(value_lst):
                     chosen = value_lst[curr_index]
 
-                    if chosen not in words:
+                    if chosen not in words and chosen not in self._duplicate_exclusion:
                         words.append(chosen)
 
                         if len(words) >= amount:
@@ -194,6 +195,7 @@ class Generator:
 
             curr_index += 1
 
+        self._duplicate_exclusion.extend(words)
         return words
 
     def _generate_helper(self, dic: Dict[str, List[str]], amount: int, name: str) -> Tuple[List[str], List[str]]:
@@ -206,8 +208,12 @@ class Generator:
             warnings.warn("Insufficient amount of %s type.(%d required, %d found)" % (name, amount, len(vals)))
             return vals, []
 
-    def generate(self, amount: int, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]],
-                 gloss_groups: List[GlossGroup]) -> Tuple[List[str], List[str], Rule, List[Template], List[int]]:
+    def generate(self, amount: int, is_fresh: bool, feature_to_type: Dict[str, str],
+                 feature_to_sounds: Dict[str, List[Sound]], gloss_groups: List[GlossGroup]) -> Tuple[
+                 List[Tuple[str, str]], List[Tuple[str, str]], Rule, List[Template], List[int]]:
+        if is_fresh:
+            self._duplicate_exclusion = []
+
         ur_words = []  # type: List[str]
         sr_words = []  # type: List[str]
         generation_amounts = [0, 0, 0, 0, 0, 0]  # type: List[int]
@@ -287,7 +293,7 @@ class Generator:
 
         gloss_words = [w.pick() for w in random.sample(gloss_groups, size)]
 
-        underlying_rep = ["%s '%s'" % (ur_words[i], gloss_words[i]) for i in range(0, size)]
-        surface_rep = ["%s '%s'" % (sr_words[i], gloss_words[i]) for i in range(0, size)]
+        underlying_rep = [(ur_words[i], gloss_words[i]) for i in range(0, size)]
+        surface_rep = [(sr_words[i], gloss_words[i]) for i in range(0, size)]
 
         return underlying_rep, surface_rep, self._rule, self._templates, generation_amounts

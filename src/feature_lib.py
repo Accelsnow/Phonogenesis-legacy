@@ -9,12 +9,22 @@ from sound import Sound
 class Particle:
     _features: List[str]
 
+    def __init__(self, features_: List[str]) -> None:
+        self._features = features_
+
     def get_matching_sounds(self, phonemes: Optional[List[Sound], None], feature_to_sounds: Dict[str, List[Sound]]) -> \
             List[Sound]:
         intersection = None
+        full_sounds = None
 
         for feature in self._features:
-            curr_sounds = list(dict.fromkeys(feature_to_sounds[feature]))
+            curr_sounds = list(dict.fromkeys(feature_to_sounds[feature.lstrip("!")]))
+
+            if feature.startswith("!"):
+                if full_sounds is None:
+                    full_sounds = set(s for key in list(feature_to_sounds.keys()) if key != 'NA' for s in key)
+
+                curr_sounds = [s for s in full_sounds if s not in curr_sounds]
 
             if intersection is None:
                 intersection = curr_sounds
@@ -39,9 +49,6 @@ class Particle:
 
     def get_features(self) -> List[str]:
         return [f for f in self._features]
-
-    def __init__(self, features_: List[str]) -> None:
-        self._features = features_
 
     def __eq__(self, other: Particle) -> bool:
         for i in range(0, len(self._features)):
