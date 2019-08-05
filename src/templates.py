@@ -101,22 +101,3 @@ def _fetch_templates(filename: str, feature_pool: List[str]) -> List[Template]:
 
     return templates
 
-
-def import_default_phonemes() -> List[Sound]:
-    return _fetch_phoneme('defaultphoneme.txt')
-
-
-def _fetch_phoneme(filename: str) -> List[Sound]:
-    phonemes = []
-
-    with open(filename, encoding='utf-8') as data_file:
-        lines = [l.rstrip('\n') for l in data_file.readlines()]
-
-        for line in lines:
-            line = line.replace('ɡ', 'g')
-            data = line.split(" ")
-
-            for sound_str in data:
-                phonemes.append(Sound(-1, '', [])[str(sound_str)])
-
-    return phonemes

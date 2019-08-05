@@ -9,7 +9,8 @@ import random
 from rules import Rule, RuleFamily, import_default_rules
 from sound import Sound
 from glossgroup import import_default_gloss
-from templates import Template, import_default_templates, import_default_phonemes
+from templates import Template, import_default_templates
+from phonemes import import_default_phonemes
 
 if __name__ == '__main__':
     tup = import_default_features()
