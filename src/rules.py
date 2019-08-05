@@ -97,14 +97,34 @@ class Rule:
         else:
             types_to_sounds = [{} for _ in range(0, len(self._Cs))]  # type: List[Dict[ExampleType, str]]
 
-            for a_loc in a_locations:
-                a_size = len(a_data[a_loc])
+            for i in range(0, len(self._Cs)):
+                c_instance = self._Cs[i]
+                d_instance = self._Ds[i]
+                c_matcher = None
+                c_size = None
+                c_edge = self._Cs_edge[i]
+                d_edge = self._Ds_edge[i]
+                d_matcher = None
+                d_size = None
 
-                for i in range(0, len(self._Cs)):
-                    c_instance = self._Cs[i]
-                    d_instance = self._Ds[i]
-                    c_edge = self._Cs_edge[i]
-                    d_edge = self._Ds_edge[i]
+                if c_instance is not None:
+                    c_matcher = self._get_c_matcher(c_instance, phonemes, None, feature_to_sounds)
+
+                    if len(c_matcher) == 0 or c_matcher == []:
+                        continue
+
+                    c_size = len(c_matcher[0])
+
+                if d_instance is not None:
+                    d_matcher = self._get_d_matcher(d_instance, phonemes, None, feature_to_sounds)
+
+                    if len(d_matcher) == 0 or c_matcher == []:
+                        continue
+
+                    d_size = len(d_matcher[0])
+
+                for a_loc in a_locations:
+                    a_size = len(a_data[a_loc])
 
                     is_c = False
 
@@ -113,9 +133,6 @@ class Rule:
                     elif not c_edge and c_instance is None:
                         is_c = True
                     else:
-                        c_matcher = self._get_c_matcher(c_instance, phonemes, None, feature_to_sounds)
-                        c_size = len(c_matcher[0])
-
                         if not c_edge or a_loc - c_size == 0:
 
                             for c_pattern in c_matcher:
@@ -130,9 +147,6 @@ class Rule:
                     elif not d_edge and d_instance is None:
                         is_d = True
                     else:
-                        d_matcher = self._get_d_matcher(d_instance, phonemes, None, feature_to_sounds)
-                        d_size = len(d_matcher[0])
-
                         if not d_edge or a_loc + a_size + d_size == len(word):
 
                             for d_pattern in d_matcher:
