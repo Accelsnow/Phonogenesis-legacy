@@ -3,6 +3,8 @@ from __future__ import annotations
 import random
 from typing import List, Dict, Optional
 
+from word import Word
+
 from feature_lib import Particle
 from sound import Sound
 
@@ -16,7 +18,7 @@ class Template:
         self._size = len(components)
 
     def generate_word_list(self, phonemes: Optional[List[Sound], None], size_limit: Optional[int, None],
-                           feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
+                           feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
         word_len = len(self._components)
         part_sounds = []
         word_list = set([])
@@ -29,7 +31,9 @@ class Template:
             part_sounds.append(part_sound)
 
         if size_limit is None:
-            return self._recur_full_word_list(part_sounds, 0, [''])
+            result = self._recur_full_word_list(part_sounds, 0, [''])
+
+            return [Word(r) for r in result]
         else:
             word_count = 0
             while word_count < size_limit:
@@ -42,7 +46,7 @@ class Template:
                 word_count += 1
 
             result = list(word_list)
-            return result
+            return [Word(r) for r in result]
 
     def _recur_full_word_list(self, comb_sound: List[List[Sound]], index: int, words: List[str]) -> List[str]:
         if index >= len(comb_sound):

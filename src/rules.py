@@ -3,6 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import List, Optional, Dict, Tuple
 
+from word import Word
 from feature_lib import Particle
 from sound import Sound
 from templates import Template
@@ -29,14 +30,14 @@ class Rule:
     A>B/C_D
     """
     _A: Optional[List[Particle], None]
-    _A_matchers: Dict[int, List[str]]
+    _A_matchers: Dict[int, List[Word]]
     _B: Optional[Tuple[Particle, List[str]], None]
     _Cs: List[Optional[List[Particle], None]]
-    _C_matchers: Dict[int, List[str]]
+    _C_matchers: Dict[int, List[Word]]
     _Ds: List[Optional[List[Particle], None]]
-    _D_matchers: Dict[int, List[str]]
+    _D_matchers: Dict[int, List[Word]]
 
-    _CADT_lib: Dict[str, List[Tuple[int, int]]]
+    _CADT_lib: Dict[Word, List[Tuple[int, int]]]
     _Cs_edge: List[bool]
     _Ds_edge: List[bool]
     _name: str
@@ -67,10 +68,10 @@ class Rule:
 
         self._CADT_lib = {}
 
-    def apply(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
-              feature_to_sounds: Dict[str, List[Sound]]) -> str:
+    def apply(self, word: Word, phonemes: List[Sound], feature_to_type: Dict[str, str],
+              feature_to_sounds: Dict[str, List[Sound]]) -> Word:
         if word not in self._CADT_lib.keys():
-            if ExampleType.CADT not in self.classify(word, phonemes, feature_to_type, feature_to_sounds, ):
+            if ExampleType.CADT not in self.classify(word, phonemes, feature_to_type, feature_to_sounds):
                 return word
 
         indexes = list(set(self._CADT_lib[word]))
@@ -87,15 +88,15 @@ class Rule:
 
         return new_word
 
-    def classify(self, word: str, phonemes: List[Sound], feature_to_type: Dict[str, str],
-                 feature_to_sounds: Dict[str, List[Sound]]) -> List[Dict[ExampleType, str]]:
+    def classify(self, word: Word, phonemes: List[Sound], feature_to_type: Dict[str, str],
+                 feature_to_sounds: Dict[str, List[Sound]]) -> List[Dict[ExampleType, Word]]:
         a_data = self.locations_a(word, phonemes, feature_to_sounds)
         a_locations = list(a_data.keys())  # type: List[int]
 
         if len(a_locations) == 0 or a_locations == []:
-            return [{ExampleType.IRR: ''} for _ in range(0, len(self._Cs))]
+            return [{ExampleType.IRR: Word([Sound(-1, '', [])])} for _ in range(0, len(self._Cs))]
         else:
-            types_to_sounds = [{} for _ in range(0, len(self._Cs))]  # type: List[Dict[ExampleType, str]]
+            extypes_to_sounds = [{} for _ in range(0, len(self._Cs))]  # type: List[Dict[ExampleType, Word]]
 
             for i in range(0, len(self._Cs)):
                 c_instance = self._Cs[i]
@@ -136,7 +137,7 @@ class Rule:
                         if not c_edge or a_loc - c_size == 0:
 
                             for c_pattern in c_matcher:
-                                if a_loc - c_size >= 0 and word[a_loc - c_size:a_loc] == c_pattern:
+                                if a_loc - c_size >= 0 and Word(word[a_loc - c_size:a_loc]) == c_pattern:
                                     is_c = True
                                     break
 
@@ -155,10 +156,10 @@ class Rule:
                                     is_d = True
                                     break
 
-                    a_str = word[a_loc]
+                    a_word = word[a_loc]
                     if is_c and is_d:
                         if word != self._do_replace(word, a_loc, a_loc + a_size, feature_to_type, feature_to_sounds):
-                            types_to_sounds[i] = {ExampleType.CADT: a_str}
+                            extypes_to_sounds[i] = {ExampleType.CADT: a_word}
                             location = (a_loc, a_loc + a_size)
 
                             # if True not in [location in val for val in self._CADT_lib.values()]:
@@ -166,21 +167,21 @@ class Rule:
                                 self._CADT_lib[word].append(location)
                             else:
                                 self._CADT_lib[word] = [location]
-                        elif ExampleType.CADT not in types_to_sounds[i]:
-                            types_to_sounds[i] = {ExampleType.CADNT: a_str}
+                        elif ExampleType.CADT not in extypes_to_sounds[i]:
+                            extypes_to_sounds[i] = {ExampleType.CADNT: a_word}
 
-                    elif ExampleType.CADT not in types_to_sounds[i] and ExampleType.CADNT not in types_to_sounds[i]:
+                    elif ExampleType.CADT not in extypes_to_sounds[i] and ExampleType.CADNT not in extypes_to_sounds[i]:
                         if is_c and not is_d:
-                            types_to_sounds[i][ExampleType.CAND] = a_str
+                            extypes_to_sounds[i][ExampleType.CAND] = a_word
                         elif not is_c and is_d:
-                            types_to_sounds[i][ExampleType.NCAD] = a_str
+                            extypes_to_sounds[i][ExampleType.NCAD] = a_word
                         elif not is_c and not is_d:
-                            types_to_sounds[i][ExampleType.NCAND] = a_str
+                            extypes_to_sounds[i][ExampleType.NCAND] = a_word
 
-            return types_to_sounds
+            return extypes_to_sounds
 
     def _get_c_matcher(self, c_instance: Optional[List[Particle], None], phonemes: Optional[List[Sound], None],
-                       size_limit: Optional[int, None], feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
+                       size_limit: Optional[int, None], feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
         dest_env = (c_instance, phonemes, size_limit, feature_to_sounds)
         match_loc = self._locate_in_env(dest_env, self._C_matchers)
 
@@ -194,7 +195,7 @@ class Rule:
         return self._C_matchers[match_loc]
 
     def _get_d_matcher(self, d_instance: Optional[List[Particle], None], phonemes: Optional[List[Sound], None],
-                       size_limit: Optional[int, None], feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
+                       size_limit: Optional[int, None], feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
         dest_env = (d_instance, phonemes, size_limit, feature_to_sounds)
         match_loc = self._locate_in_env(dest_env, self._D_matchers)
 
@@ -209,7 +210,7 @@ class Rule:
 
     def _locate_in_env(self, dest_env: Tuple[
         Optional[List[Particle], None], Optional[List[Sound], None], Optional[int, None], Dict[str, List[Sound]]],
-                       target_matchers: Dict[int, List[str]]):
+                       target_matchers: Dict[int, List[Word]]):
         match_loc = -1
 
         for key in target_matchers.keys():
@@ -240,21 +241,21 @@ class Rule:
         if len(a_matcher) == 0:
             raise ValueError("No matching A found in the phonemes!")
 
-        for a_str in a_matcher:
-            if len(a_str) != 1:
+        for a_word in a_matcher:
+            if len(a_word) != 1:
                 raise NotImplementedError("Currently only support A of size 1")
 
-            b_str = self._do_replace(a_str, 0, 1, feature_to_type, feature_to_sounds)
-            all_phones.add(a_str)
-            all_phones.add(b_str)
-            result[a_str] = b_str
+            b_word = self._do_replace(a_word, 0, 1, feature_to_type, feature_to_sounds)
+            all_phones.add(str(a_word))
+            all_phones.add(str(b_word))
+            result[str(a_word)] = str(b_word)
 
         all_phones = list(all_phones)
         all_phones.sort(key=lambda x: Sound(-1, '', [])[x].get_num())
         return result, all_phones
 
-    def locations_a(self, word: str, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> Dict[
-        int, str]:
+    def locations_a(self, word: Word, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> Dict[
+        int, Word]:
         if self._A is None:
             dict_ = {}
 
@@ -262,31 +263,30 @@ class Rule:
                 dict_[i] = word[i]
             return dict_
 
-        a_matcher = self._get_a_matcher(phonemes, None, feature_to_sounds)  # type:List[str]
+        a_matcher = self._get_a_matcher(phonemes, None, feature_to_sounds)  # type:List[Word]
         prev_index = 0  # type: int
-        result = {}  # type: Dict[int, str]
+        result = {}  # type: Dict[int, Word]
         i = 0
 
         while i < len(a_matcher):
             a_pattern = a_matcher[i]
+            a_index = word.index(a_pattern, prev_index)
 
-            try:
-                a_index = word.index(a_pattern, prev_index)
-
-                prev_index = a_index + 1
-                result[a_index] = a_pattern
-                i -= 1
-            except ValueError:
+            if a_index < 0:
                 i += 1
                 prev_index = 0
                 continue
+            else:
+                prev_index = a_index + 1
+                result[a_index] = a_pattern
+                i -= 1
 
             i += 1
 
         return result
 
     def _get_a_matcher(self, phonemes: List[Sound], size_limit: Optional[int, None],
-                       feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
+                       feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
         dest_env = (self._A, phonemes, size_limit, feature_to_sounds)
         match_loc = self._locate_in_env(dest_env, self._D_matchers)
 
@@ -299,23 +299,26 @@ class Rule:
 
         return self._A_matchers[match_loc]
 
-    def _do_replace(self, word: str, begin_index: int, end_index: int, feature_to_type: Dict[str, str],
-                    feature_to_sounds: Dict[str, List[Sound]]) -> str:
-        target = word[begin_index:end_index]
+    def _do_replace(self, word: Word, begin_index: int, end_index: int, feature_to_type: Dict[str, str],
+                    feature_to_sounds: Dict[str, List[Sound]]) -> Word:
+        target = str(word[begin_index:end_index])
+
+        if end_index - begin_index != 1:
+            raise NotImplementedError(
+                "begin %d end %d type like this has not been implemented yet" % (begin_index, end_index))
 
         if self._B is None:
-            dest_sound = ''
+            return word.change_word(begin_index, None)
         else:
             dest_particle = self._B[0]
             ignored_types = self._B[1]
 
             dest_sound = Sound(-1, '', [])[target].get_transformed_sound(dest_particle, ignored_types, feature_to_type,
                                                                          feature_to_sounds)
+            if dest_sound is not None:
+                return word.change_word(begin_index, Word([dest_sound]))
 
-        if dest_sound is not None:
-            return word[:begin_index] + str(dest_sound) + word[end_index:]
-        else:
-            return word
+        return word
 
     def get_name(self) -> str:
         return self._name
@@ -364,19 +367,22 @@ class Rule:
 
 
 class PredefinedRule(Rule):
-    def __init__(self, name: str, family: RuleFamily, a_to_b: Dict[str, str],
+    def __init__(self, name: str, family: RuleFamily, a_to_b: Dict[Word, Word],
                  c: List[Optional[List[Particle], None]], c_edge: List[bool], d: List[Optional[List[Particle], None]],
                  d_edge: List[bool]) -> None:
         Rule.__init__(self, name, family, [], None, c, c_edge, d, d_edge)
 
         self._AtoB = a_to_b
 
-    def _do_replace(self, word: str, begin_index: int, end_index: int, feature_to_type: Dict[str, str],
-                    feature_to_sounds: Dict[str, List[Sound]]) -> str:
-        return word[:begin_index] + self._AtoB[word[begin_index:end_index]] + word[end_index:]
+    def _do_replace(self, word: Word, begin_index: int, end_index: int, feature_to_type: Dict[str, str],
+                    feature_to_sounds: Dict[str, List[Sound]]) -> Word:
+        if end_index - begin_index != 1:
+            raise NotImplementedError(
+                "begin %d end %d type like this has not been implemented yet" % (begin_index, end_index))
+        return word.change_word(begin_index, self._AtoB[Word(word[begin_index:end_index])])
 
     def _get_a_matcher(self, phonemes: List[Sound], size_limit: Optional[int, None],
-                       feature_to_sounds: Dict[str, List[Sound]]) -> List[str]:
+                       feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
         return list(self._AtoB.keys())
 
     def get_content_str(self) -> str:

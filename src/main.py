@@ -6,6 +6,7 @@ from typing import List, Dict, Tuple
 from feature_lib import Particle, import_default_features
 from generator import Generator
 import random
+from word import Word
 from rules import Rule, RuleFamily, import_default_rules
 from sound import Sound
 from glossgroup import import_default_gloss
@@ -59,12 +60,14 @@ if __name__ == '__main__':
 
     print("\n==================================================\n")
 
-    manual_rule_select = 81
+    manual_rule_select = 33
 
     # while True:
     #     # word = input("\nWord to check: ")
-    #     word = "d͡ʒet͡ʃta"
-    #     print(rules[manual_rule_select].classify(word, phonemes, feature_to_type, feature_to_sounds))
+    #     word = "et͡ʃsi"
+    #     print(rules[manual_rule_select])
+    #     print(rules[manual_rule_select].classify(Word(word), phonemes, feature_to_type, feature_to_sounds))
+    #     print(str(rules[manual_rule_select].apply(Word(word), phonemes, feature_to_type, feature_to_sounds)))
     #     break
 
     if len(sys.argv) > 1:

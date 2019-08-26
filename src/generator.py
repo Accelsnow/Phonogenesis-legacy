@@ -4,13 +4,14 @@ import random
 import warnings
 from typing import List, Tuple, Dict
 
+from word import Word
 from rules import Rule, ExampleType
 from sound import Sound
 from templates import Template
 
 from glossgroup import GlossGroup
 
-WORD_LIST_SIZE_LIMIT = 1000
+WORD_POOL_MAX_SIZE = 500
 
 EXCLUSION_TYPES = [ExampleType.CADT, ExampleType.CADNT]
 
@@ -21,13 +22,13 @@ class Generator:
     _templates: List[Template]
     _rule: Rule
     _phonemes: List[Sound]
-    _CADT: List[Dict[str, List[str]]]
-    _CADNT: List[Dict[str, List[str]]]
-    _CAND: List[Dict[str, List[str]]]
-    _NCAD: List[Dict[str, List[str]]]
-    _NCAND: List[Dict[str, List[str]]]
-    _IRR: List[Dict[str, List[str]]]
-    _duplicate_exclusion: List[str]
+    _CADT: List[Dict[Word, List[Word]]]
+    _CADNT: List[Dict[Word, List[Word]]]
+    _CAND: List[Dict[Word, List[Word]]]
+    _NCAD: List[Dict[Word, List[Word]]]
+    _NCAND: List[Dict[Word, List[Word]]]
+    _IRR: List[Dict[Word, List[Word]]]
+    _duplicate_exclusion: List[Word]
 
     def __init__(self, phonemes: List[Sound], templates: List[Template], rule: Rule, difficulty: int,
                  feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> None:
@@ -48,17 +49,21 @@ class Generator:
 
         self._difficulty = difficulty
         self._initialize_templates(feature_to_type, feature_to_sounds)
+        print(self._CADT)
 
     def _initialize_templates(self, feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> None:
         initialized = False
+        template_pool_size = WORD_POOL_MAX_SIZE / len(self._templates)
+        generation_summary = {ExampleType.CADT: 0, ExampleType.CADNT: 0, ExampleType.CAND: 0, ExampleType.NCAD: 0,
+                              ExampleType.NCAND: 0, ExampleType.IRR: 0}
 
         for template in self._templates:
-            word_list = template.generate_word_list(self._phonemes, WORD_LIST_SIZE_LIMIT, feature_to_sounds)
+            word_list = template.generate_word_list(self._phonemes, template_pool_size, feature_to_sounds)
             random.shuffle(word_list)
 
             for word in word_list:
                 classify_data = self._rule.classify(word, self._phonemes, feature_to_type, feature_to_sounds)
-                records = []  # type: List[Tuple[ExampleType, Dict[str, List[str]], str, str]]
+                records = []  # type: List[Tuple[ExampleType, Dict[Word, List[Word]], Word, Word]]
                 exclusion_lock = False
                 no_irr = False
 
@@ -103,13 +108,17 @@ class Generator:
                             no_irr = True
 
                 for record in records:
+                    generation_summary[record[0]] += 1
+
                     if record[0] != ExampleType.IRR or not no_irr:
                         self._dict_add(record[1], record[2], record[3])
 
                 initialized = True
 
+        print(generation_summary)
+
     @staticmethod
-    def _dict_add(dic: Dict[str, List[str]], key: str, value: str) -> None:
+    def _dict_add(dic: Dict[Word, List[Word]], key: Word, value: Word) -> None:
         if key in dic:
             if value not in dic[key]:
                 dic[key].append(value)
@@ -145,7 +154,7 @@ class Generator:
         return cadt, cadnt, cand, ncad, ncand, irr
 
     @staticmethod
-    def _get_dist_values(dic: Dict[str, List[str]]) -> List[str]:
+    def _get_dist_values(dic: Dict[Word, List[Word]]) -> List[Word]:
         existed = []
 
         for lst in dic.values():
@@ -155,7 +164,7 @@ class Generator:
 
         return existed
 
-    def _generate_words(self, amount: int, dic: Dict[str, List[str]]) -> List[str]:
+    def _generate_words(self, amount: int, dic: Dict[Word, List[Word]]) -> List[Word]:
         if amount == 0:
             return []
 
@@ -198,7 +207,7 @@ class Generator:
         self._duplicate_exclusion.extend(words)
         return words
 
-    def _generate_helper(self, dic: Dict[str, List[str]], amount: int, name: str) -> Tuple[List[str], List[str]]:
+    def _generate_helper(self, dic: Dict[Word, List[Word]], amount: int, name: str) -> Tuple[List[Word], List[Word]]:
         vals = self._get_dist_values(dic)
 
         if len(vals) >= amount:
@@ -210,12 +219,12 @@ class Generator:
 
     def generate(self, amount: int, is_fresh: bool, feature_to_type: Dict[str, str],
                  feature_to_sounds: Dict[str, List[Sound]], gloss_groups: List[GlossGroup]) -> Tuple[
-                 List[Tuple[str, str]], List[Tuple[str, str]], Rule, List[Template], List[int]]:
+        List[Tuple[Word, str]], List[Tuple[Word, str]], Rule, List[Template], List[int]]:
         if is_fresh:
             self._duplicate_exclusion = []
 
-        ur_words = []  # type: List[str]
-        sr_words = []  # type: List[str]
+        ur_words = []  # type: List[Word]
+        sr_words = []  # type: List[Word]
         generation_amounts = [0, 0, 0, 0, 0, 0]  # type: List[int]
         split_size = len(self._CADT)
         piece_size = round(amount / split_size)

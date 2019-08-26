@@ -8,7 +8,7 @@ from random import random, sample
 
 
 def import_default_phonemes() -> List[Sound]:
-    return _fetch_randomized_phonemes("defaultrandomizedphoneme.txt")
+    return _fetch_preset_phonemes("defaultrandomizedphoneme.txt")
 
 
 def _fetch_randomized_phonemes(filename: str) -> List[Sound]:
