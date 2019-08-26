@@ -59,11 +59,11 @@ if __name__ == '__main__':
 
     print("\n==================================================\n")
 
-    manual_rule_select = 3
+    manual_rule_select = 81
 
     # while True:
     #     # word = input("\nWord to check: ")
-    #     word = ""
+    #     word = "d͡ʒet͡ʃta"
     #     print(rules[manual_rule_select].classify(word, phonemes, feature_to_type, feature_to_sounds))
     #     break
 

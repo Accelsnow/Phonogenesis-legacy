@@ -1,82 +1,82 @@
 ﻿rule,name,family
-[obstruent]>[voiceless]/_#,word-final obstruent devoicing,consonant devoicing
-"[voiceless,oral stop]>[spread]/#_",word-initial aspiration of voiceless stops,aspiration
-"[not spread,fricative]>[voiced]/[vowel]_[vowel]",intervocalic fricative voicing,lenition
-[vowel]>[lax]/_[consonant]#&_[consonant][consonant],vowel laxing in closed syllables,vowel tenseness
+"[obstruent,voiced]>[voiceless]/_#",word-final obstruent devoicing,consonant devoicing
+"[voiceless,oral stop,not spread]>[spread]/#_",word-initial aspiration of voiceless stops,aspiration
+"[not spread,fricative,voiceless]>[voiced]/[vowel]_[vowel]",intervocalic fricative voicing,lenition
+"[vowel,tense]>[lax]/_[consonant]#&_[consonant][consonant]",vowel laxing in closed syllables,vowel tenseness
 "<<PREDEFINED>>{'k':'t͡ʃ','g':'d͡ʒ'}/_[front,vowel]",palatal mutation of velar stops to postalveolar affricates before front vowels,palatalization
 ,,
-[consonant]>[voiceless]/_#,word-final stop devoicing,consonant devoicing
-[oral stop]>[voiceless]/_#,word-final consonant devoicing,consonant devoicing
-"[obstruent]>[voiceless]/_#&_[voiceless,consonant]&_[sonorant,consonant]",obstruent devoicing in codas,consonant devoicing
-"[obstruent]>[voiceless]/_#&_[voiceless,consonant]&_[sonorant,consonant]",obstruent devoicing in codas,consonant devoicing
+"[consonant,voiced]>[voiceless]/_#",word-final stop devoicing,consonant devoicing
+"[oral stop,voiced]>[voiceless]/_#",word-final consonant devoicing,consonant devoicing
+"[obstruent,voiced]>[voiceless]/_#&_[voiceless,consonant]&_[sonorant,consonant]",obstruent devoicing in codas,consonant devoicing
+"[obstruent,voied]>[voiceless]/_#&_[voiceless,consonant]&_[sonorant,consonant]",obstruent devoicing in codas,consonant devoicing
 ,,
-"[voiceless,oral stop]>[spread]/_[vowel]",aspiration of voiceless stops in onsets,aspiration
-"[voiceless,oral stop]>[spread]/_[consonant]&_#",aspiration of voiceless stops in codas,aspiration
-"[voiceless,oral stop]>[spread]/_#",word-final aspiration of voiceless stops,aspiration
+"[voiceless,oral stop,not spread]>[spread]/_[vowel]",aspiration of voiceless stops in onsets,aspiration
+"[voiceless,oral stop,not spread]>[spread]/_[consonant]&_#",aspiration of voiceless stops in codas,aspiration
+"[voiceless,oral stop,not spread]>[spread]/_#",word-final aspiration of voiceless stops,aspiration
 ,,
-"[not spread,fricative]>[voiced]/[vowel]_[vowel]",intervocalic fricative voicing,lenition
-"[not spread,obstruent]>[voiced]/[vowel]_[vowel]",intervocalic obstruent voicing,lenition
+"[not spread,fricative,voiceless]>[voiced]/[vowel]_[vowel]",intervocalic fricative voicing,lenition
+"[not spread,obstruent,voiceless]>[voiced]/[vowel]_[vowel]",intervocalic obstruent voicing,lenition
 "[voiced,oral stop]>[fricative,continuant,(stridency)]/[vowel]_[vowel]",intervocalic spirantization of voiced stops,lenition
 "[voiced,oral stop]>[fricative,continuant,(stridency)]/[vowel]_",postvocalic spirantization of voiced stops,lenition
 "[voiceless,oral stop]>[fricative,continuant,(stridency)]/_#&_[consonant][consonant]",spirantization of voiceless stops in codas,lenition
 ,,
-"[high,vowel]>[lax]/_[consonant]#&_[consonant][consonant]",high vowel laxing in closed syllables,vowel tenseness
-"[mid,vowel]>[lax]/_[consonant]#&_[consonant][consonant]",mid vowel laxing in closed syllables,vowel tenseness
+"[high,vowel,tense]>[lax]/_[consonant]#&_[consonant][consonant]",high vowel laxing in closed syllables,vowel tenseness
+"[mid,vowel,tense]>[lax]/_[consonant]#&_[consonant][consonant]",mid vowel laxing in closed syllables,vowel tenseness
 ,,
-"<<PREDEFINED>>{'k':'t͡ʃ','g':'d͡ʒ'}/_[front,vowel]",palatal mutation of velar stops to postalveolar affricates before front vowels,palatalization
-"<<PREDEFINED>>{'k':'ʃ','g':'ʒ'}/_[front,vowel]",palatal mutation of velar stops to postalveolar fricatives before front vowels,palatalization
-"<<PREDEFINED>>{'k':'t͡s','g':'d͡z'}/_[front,vowel]",palatal mutation of velar stops to alveolar affricates before front vowels,palatalization
-"<<PREDEFINED>>{'k':'s','g':'z'}/_[front,vowel]",palatal mutation of velar stops to alveolar fricatives before front vowels,palatalization
-"<<PREDEFINED>>{'t':'t͡ʃ','d':'d͡ʒ'}/_[front,vowel]",palatal mutation of alveolar stops to postalveolar affricates before front vowels,palatalization
-"<<PREDEFINED>>{'t':'ʃ','d':'ʒ'}/_[front,vowel]",palatal mutation of alveolar stops to postalveolar fricatives before front vowels,palatalization
-"<<PREDEFINED>>{'t':'t͡s','d':'d͡z'}/_[front,vowel]",palatal mutation of alveolar stops to alveolar affricates before front vowels,palatalization
-"<<PREDEFINED>>{'t':'s','d':'z'}/_[front,vowel]",palatal mutation of alveolar stops to alveolar fricatives before front vowels,palatalization
-"<<PREDEFINED>>{'k':'t͡ʃ','g':'d͡ʒ'}/_[high,front,vowel]",palatal mutation of velar stops to postalveolar affricates before high front vowels,palatalization
-"<<PREDEFINED>>{'k':'ʃ','g':'ʒ'}/_[high,front,vowel]",palatal mutation of velar stops to postalveolar fricatives before high front vowels,palatalization
-"<<PREDEFINED>>{'k':'t͡s','g':'d͡z'}/_[high,front,vowel]",palatal mutation of velar stops to alveolar affricates before high front vowels,palatalization
-"<<PREDEFINED>>{'k':'s','g':'z'}/_[high,front,vowel]",palatal mutation of velar stops to alveolar fricatives before high front vowels,palatalization
-"<<PREDEFINED>>{'t':'t͡ʃ','d':'d͡ʒ'}/_[high,front,vowel]",palatal mutation of alveolar stops to postalveolar affricates before high front vowels,palatalization
-"<<PREDEFINED>>{'t':'ʃ','d':'ʒ'}/_[high,front,vowel]",palatal mutation of alveolar stops to postalveolar fricatives before high front vowels,palatalization
-"<<PREDEFINED>>{'t':'t͡s','d':'d͡z'}/_[high,front,vowel]",palatal mutation of alveolar stops to alveolar affricates before high front vowels,palatalization
-"<<PREDEFINED>>{'t':'s','d':'z'}/_[high,front,vowel]",palatal mutation of alveolar stops to alveolar fricatives before high front vowels,palatalization
-"[velar,consonant]>[palatal,front]/[front,vowel]_",palatalization of velars after front vowels,palatalization
-"[velar,consonant]>[palatal,front]/_[front,vowel]",palatalization of velars before front vowels,palatalization
-"[velar,fricative]>[palatal,front]/[front,vowel]_",palatalization of velar fricatives after front vowels,palatalization
-"[velar]>[palatal,front]/_[front,vowel]",palatalization of velars before front vowels,palatalization
-"[velar,consonant]>[palatal,front]/[high,front,vowel]_",palatalization of velars after high front vowels,palatalization
-"[velar,consonant]>[palatal,front]/_[high,front,vowel]",palatalization of velars before high front vowels,palatalization
-"[velar,fricative]>[palatal,front]/[high,front,vowel]_",palatalization of velar fricatives after high front vowels,palatalization
-"[velar]>[palatal,front]/_[high,front,vowel]",palatalization of velars before high front vowels,palatalization
+"[velar,oral stop]>[coronal,postalveolar,affricate,posterior,laminal,strident],[backness,height]/_[front,vowel]",palatal mutation of velar stops to postalveolar affricates before front vowels,palatalization
+"[velar,oral stop]>[coronal,postalveolar,fricative,posterior,laminal,strident],[backness,height]/_[front,vowel]",palatal mutation of velar stops to postalveolar fricatives before front vowels,palatalization
+"[velar,oral stop]>[coronal,alveolar,affricate,anterior,apical,strident],[backness,height]/_[front,vowel]",palatal mutation of velar stops to alveolar affricates before front vowels,palatalization
+"[velar,oral stop]>[coronal,alveolar,fricative,anterior,apical,strident],[backness,height]/_[front,vowel]",palatal mutation of velar stops to alveolar fricatives before front vowels,palatalization
+"[alveolar,oral stop]>[postalveolar,affricate,posterior,laminal,strident]/_[front,vowel]",palatal mutation of alveolar stops to postalveolar affricates before front vowels,palatalization
+"[alveolar,oral stop]>[postalveolar,fricative,posterior,laminal,strident]/_[front,vowel]",palatal mutation of alveolar stops to postalveolar fricatives before front vowels,palatalization
+"[alveolar,oral stop]>[affricate,strident]/_[front,vowel]",palatal mutation of alveolar stops to alveolar affricates before front vowels,palatalization
+"[alveolar,oral stop]>[fricative,strident]/_[front,vowel]",palatal mutation of alveolar stops to alveolar fricatives before front vowels,palatalization
+"[velar,oral stop]>[coronal,postalveolar,affricate,posterior,laminal,strident],[backness,height]/_[high,front,vowel]",palatal mutation of velar stops to postalveolar affricates before high front vowels,palatalization
+"[velar,oral stop]>[coronal,postalveolar,fricative,posterior,laminal,strident],[backness,height]/_[high,front,vowel]",palatal mutation of velar stops to postalveolar fricatives before high front vowels,palatalization
+"[velar,oral stop]>[coronal,alveolar,affricate,anterior,apical,strident],[backness,height]/_[high,front,vowel]",palatal mutation of velar stops to alveolar affricates before high front vowels,palatalization
+"[velar,oral stop]>[coronal,alveolar,fricative,anterior,apical,strident],[backness,height]/_[high,front,vowel]",palatal mutation of velar stops to alveolar fricatives before high front vowels,palatalization
+"[alveolar,oral stop]>[postalveolar,affricate,posterior,laminal,strident]/_[high,front,vowel]",palatal mutation of alveolar stops to postalveolar affricates before high front vowels,palatalization
+"[alveolar,oral stop]>[postalveolar,fricative,posterior,laminal,strident]/_[high,front,vowel]",palatal mutation of alveolar stops to postalveolar fricatives before high front vowels,palatalization
+"[alveolar,oral stop]>[affricate,strident]/_[high,front,vowel]",palatal mutation of alveolar stops to alveolar affricates before high front vowels,palatalization
+"[alveolar,oral stop]>[fricative,strident]/_[high,front,vowel]",palatal mutation of alveolar stops to alveolar fricatives before high front vowels,palatalization
+"[velar,consonant]>[palatal,front,posterior,laminal],[secondary POA,stridency]/[front,vowel]_",palatalization of velars after front vowels,palatalization
+"[velar,consonant]>[palatal,front,posterior,laminal],[secondary POA,stridency]/_[front,vowel]",palatalization of velars before front vowels,palatalization
+"[velar,fricative]>[palatal,front,posterior,laminal,not strident],[secondary POA]/[front,vowel]_",palatalization of velar fricatives after front vowels,palatalization
+"[velar,fricative]>[palatal,front,posterior,laminal,not strident],[secondary POA]/_[front,vowel]",palatalization of velar fricatives before front vowels,palatalization
+"[velar,consonant]>[palatal,front,posterior,laminal],[secondary POA,stridency]/[high,front,vowel]_",palatalization of velars after high front vowels,palatalization
+"[velar,consonant]>[palatal,front,posterior,laminal],[secondary POA,stridency]/_[high,front,vowel]",palatalization of velars before high front vowels,palatalization
+"[velar,fricative]>[palatal,front,posterior,laminal,not strident],[secondary POA]/[high,front,vowel]_",palatalization of velar fricatives after high front vowels,palatalization
+"[velar,fricative]>[palatal,front,posterior,laminal,not strident],[secondary POA]/_[high,front,vowel]",palatalization of velar fricatives before high front vowels,palatalization
 ,,
-[vowel]>[nasal]/_[nasal],regressive vowel nasalization,nasalization
-[vowel]>[nasal]/[nasal]_,progressive vowel nasalization,nasalization
-[vowel]>[nasal]/_[nasal]#&_[nasal][consonant],regressive vowel nasalization from nasal codas,nasalization
+"[vowel,oral]>[nasal]/_[nasal]",regressive vowel nasalization,nasalization
+"[vowel,oral]>[nasal]/[nasal]_",progressive vowel nasalization,nasalization
+"[vowel,oral]>[nasal]/_[nasal]#&_[nasal][consonant]",regressive vowel nasalization from nasal codas,nasalization
 ,,
-[vowel]>[voiceless]/_#,word-final vowel devoicing,vowel devoicing
-"[high,vowel]>[voiceless]/_#",word-final high vowel devoicing,vowel devoicing
-[vowel]>[voiceless]/[voiceless]_#,word-final vowel devoicing after voiceless consonants,vowel devoicing
-"[high,vowel]>[voiceless]/[voiceless]_#",word-final high vowel devoicing after voiceless consonants,vowel devoicing
-[vowel]>[voiceless]/[voiceless]_[voiceless],vowel devoicing between voiceless consonants,vowel devoicing
-"[high,vowel]>[voiceless]/[voiceless]_[voiceless]",high vowel devoicing between voiceless consonants,vowel devoicing
+"[vowel,voiced]>[voiceless]/_#",word-final vowel devoicing,vowel devoicing
+"[high,vowel,voiced]>[voiceless]/_#",word-final high vowel devoicing,vowel devoicing
+"[vowel,voiced]>[voiceless]/[voiceless]_#",word-final vowel devoicing after voiceless consonants,vowel devoicing
+"[high,vowel,voiced]>[voiceless]/[voiceless]_#",word-final high vowel devoicing after voiceless consonants,vowel devoicing
+"[vowel,voiced]>[voiceless]/[voiceless]_[voiceless]",vowel devoicing between voiceless consonants,vowel devoicing
+"[high,vowel,voiced]>[voiceless]/[voiceless]_[voiceless]",high vowel devoicing between voiceless consonants,vowel devoicing
 ,,
-"[oral stop]>[voiced]/[nasal,consonant]_",postnasal voicing of stops,consonant voicing
-"[obstruent]>[voiced]/[nasal,consonant]_",postnasal voicing of obstruents,consonant voicing
-"[fricative]>[voiced]/[nasal,consonant]_",postnasal voicing of fricatives,consonant voicing
+"[oral stop,voiceless]>[voiced]/[nasal,consonant]_",postnasal voicing of stops,consonant voicing
+"[obstruent,voiceless]>[voiced]/[nasal,consonant]_",postnasal voicing of obstruents,consonant voicing
+"[fricative,voiceless]>[voiced]/[nasal,consonant]_",postnasal voicing of fricatives,consonant voicing
 ,,
-[oral stop]>[voiceless]/_[voiceless],regressive voicelessness assimilation in stops,voicing assimilation
-[obstruent]>[voiceless]/_[voiceless],regressive voicelessness assimilation in obstruents,voicing assimilation
-"[oral stop]>[voiced]/_[voiced,consonant]",regressive voicing assimilation in stops,voicing assimilation
-"[obstruent]>[voiced]/_[voiced,consonant]",regressive voicing assimilation in obstruents,voicing assimilation
-"[oral stop]>[voiced]/_[voiced,obstruent]",regressive obstruent voicing assimilation in stops,voicing assimilation
-"[obstruent]>[voiced]/_[voiced,obstruent]",regressive obstruent voicing assimilation in obstruents,voicing assimilation
-[oral stop]>[voiceless]/[voiceless]_,progressive voicelessness assimilation in stops,voicing assimilation
-[obstruent]>[voiceless]/[voiceless]_,progressive voicelessness assimilation in obstruents,voicing assimilation
-"[oral stop]>[voiced]/[voiced,consonant]_",progressive voicing assimilation in stops,voicing assimilation
-"[obstruent]>[voiced]/[voiced,consonant]_",progressive voicing assimilation in obstruents,voicing assimilation
-"[oral stop]>[voiced]/[voiced,obstruent]_",progressive obstruent voicing assimilation in stops,voicing assimilation
-"[obstruent]>[voiced]/[voiced,obstruent]_",progressive obstruent voicing assimilation in obstruents,voicing assimilation
-"[obstruent]>[voiced]/[voiceless,obstruent]_&_[voiceless,obstruent]",voicelessness agreement between obstruents,voicing assimilation
-"[obstruent]>[voiced]/[voiced,obstruent]_&_[voiced,obstruent]",voicing agreement between obstruents,voicing assimilation
+"[oral stop,voiced]>[voiceless]/_[voiceless]",regressive voicelessness assimilation in stops,voicing assimilation
+"[obstruent,voiced]>[voiceless]/_[voiceless]",regressive voicelessness assimilation in obstruents,voicing assimilation
+"[oral stop,voiceless]>[voiced]/_[voiced,consonant]",regressive voicing assimilation in stops,voicing assimilation
+"[obstruent,voiceless]>[voiced]/_[voiced,consonant]",regressive voicing assimilation in obstruents,voicing assimilation
+"[oral stop,voiceless]>[voiced]/_[voiced,obstruent]",regressive obstruent voicing assimilation in stops,voicing assimilation
+"[obstruent,voiceless]>[voiced]/_[voiced,obstruent]",regressive obstruent voicing assimilation in obstruents,voicing assimilation
+"[oral stop,voiced]>[voiceless]/[voiceless]_",progressive voicelessness assimilation in stops,voicing assimilation
+"[obstruent,voiced]>[voiceless]/[voiceless]_",progressive voicelessness assimilation in obstruents,voicing assimilation
+"[oral stop,voiceless]>[voiced]/[voiced,consonant]_",progressive voicing assimilation in stops,voicing assimilation
+"[obstruent,voiceless]>[voiced]/[voiced,consonant]_",progressive voicing assimilation in obstruents,voicing assimilation
+"[oral stop,voiceless]>[voiced]/[voiced,obstruent]_",progressive obstruent voicing assimilation in stops,voicing assimilation
+"[obstruent,voiceless]>[voiced]/[voiced,obstruent]_",progressive obstruent voicing assimilation in obstruents,voicing assimilation
+"[obstruent,voiceless]>[voiced]/[voiceless,obstruent]_&_[voiceless,obstruent]",voicelessness agreement between obstruents,voicing assimilation
+"[obstruent,voiceless]>[voiced]/[voiced,obstruent]_&_[voiced,obstruent]",voicing agreement between obstruents,voicing assimilation
 ,,
 "[mid,vowel]>[high]/_#",word-final raising of mid vowels,vowel height
 "[hiɡh,vowel]>[mid]/_#",word-final lowerinɡ of hiɡh vowels,vowel height
