@@ -26,8 +26,7 @@ class Word:
         elif type(data) == list and len(data) > 0 and type(data[0]) == Sound:
             self._sounds = data
         else:
-            print(type(data))
-            raise TypeError("data must be either sound list or string")
+            raise TypeError("data must be either sound list or string, get %s" % str(type(data)))
 
     def get_sounds(self) -> List[Sound]:
         return self._sounds

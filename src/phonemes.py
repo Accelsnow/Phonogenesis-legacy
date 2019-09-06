@@ -4,14 +4,15 @@ import random
 from typing import List
 
 from sound import Sound
+from word import Word
 from random import random, sample
 
 
-def import_default_phonemes() -> List[Sound]:
+def import_default_phonemes() -> List[Word]:
     return _fetch_preset_phonemes("defaultrandomizedphoneme.txt")
 
 
-def _fetch_randomized_phonemes(filename: str) -> List[Sound]:
+def _fetch_randomized_phonemes(filename: str) -> List[Word]:
     phoneme_list = []
     phoneme_str = []
 
@@ -110,12 +111,12 @@ def _fetch_randomized_phonemes(filename: str) -> List[Sound]:
         rf.extend(["ɪ", "ʊ", "u"])
 
     phoneme_randomized = [s for s in phoneme_str if s not in rf]
-    phonemes = [Sound(-1, '', [])[str(s)] for s in phoneme_randomized]
+    phonemes = [Word([Sound(-1, '', [])[str(s)]]) for s in phoneme_randomized]
 
     return phonemes
 
 
-def _fetch_preset_phonemes(filename: str) -> List[Sound]:
+def _fetch_preset_phonemes(filename: str) -> List[Word]:
     phonemes = []
 
     with open(filename, encoding='utf-8') as data_file:
@@ -126,6 +127,6 @@ def _fetch_preset_phonemes(filename: str) -> List[Sound]:
             data = line.split(" ")
 
             for sound_str in data:
-                phonemes.append(Sound(-1, '', [])[str(sound_str)])
+                phonemes.append(Word([Sound(-1, '', [])[str(sound_str)]]))
 
     return phonemes

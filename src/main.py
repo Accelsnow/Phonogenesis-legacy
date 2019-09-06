@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     print("\n==================================================\n")
 
-    manual_rule_select = 33
+    manual_rule_select = 0
 
     # while True:
     #     # word = input("\nWord to check: ")

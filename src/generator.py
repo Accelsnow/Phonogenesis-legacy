@@ -11,7 +11,9 @@ from templates import Template
 
 from glossgroup import GlossGroup
 
-WORD_POOL_MAX_SIZE = 500
+WORD_POOL_MAX_SIZE = 300
+IRR_PERCENTAGE = 0.1
+RELATED_PERCENTAGE = 0.9
 
 EXCLUSION_TYPES = [ExampleType.CADT, ExampleType.CADNT]
 
@@ -21,7 +23,7 @@ class Generator:
     _difficulty_to_percent: Dict[int, Tuple[float, float, float, float, float, float]]
     _templates: List[Template]
     _rule: Rule
-    _phonemes: List[Sound]
+    _phonemes: List[Word]
     _CADT: List[Dict[Word, List[Word]]]
     _CADNT: List[Dict[Word, List[Word]]]
     _CAND: List[Dict[Word, List[Word]]]
@@ -30,7 +32,7 @@ class Generator:
     _IRR: List[Dict[Word, List[Word]]]
     _duplicate_exclusion: List[Word]
 
-    def __init__(self, phonemes: List[Sound], templates: List[Template], rule: Rule, difficulty: int,
+    def __init__(self, phonemes: List[Word], templates: List[Template], rule: Rule, difficulty: int,
                  feature_to_type: Dict[str, str], feature_to_sounds: Dict[str, List[Sound]]) -> None:
         self._templates = templates
         self._rule = rule
@@ -58,10 +60,21 @@ class Generator:
                               ExampleType.NCAND: 0, ExampleType.IRR: 0}
 
         for template in self._templates:
-            word_list = template.generate_word_list(self._phonemes, template_pool_size, feature_to_sounds)
-            random.shuffle(word_list)
+            irr_size = round(template_pool_size * IRR_PERCENTAGE)
+            related_size = round(template_pool_size * RELATED_PERCENTAGE)
 
-            for word in word_list:
+            a_matcher = self._rule.get_a_matcher(self._phonemes, None, feature_to_sounds)
+            irr_phoneme = [w for w in self._phonemes if w not in a_matcher]
+
+            related_word_list = template.generate_word_list(self._phonemes, related_size, feature_to_sounds, a_matcher)
+            irr_word_list = template.generate_word_list(irr_phoneme, irr_size, feature_to_sounds, None)
+
+            random.shuffle(related_word_list)
+            random.shuffle(irr_word_list)
+
+            # RELATED
+
+            for word in related_word_list:
                 classify_data = self._rule.classify(word, self._phonemes, feature_to_type, feature_to_sounds)
                 records = []  # type: List[Tuple[ExampleType, Dict[Word, List[Word]], Word, Word]]
                 exclusion_lock = False
@@ -79,7 +92,7 @@ class Generator:
                         self._IRR.append({})
 
                     if ExampleType.IRR in data:
-                        records.append((ExampleType.IRR, self._IRR[index], data[ExampleType.IRR], word))
+                        raise ValueError("Related word list should never have IRR type")
                     elif ExampleType.CADT in data:
                         inherited = [r for r in records if r[0] == ExampleType.CADT]
                         inherited.append((ExampleType.CADT, self._CADT[index], data[ExampleType.CADT], word))
@@ -114,6 +127,14 @@ class Generator:
                         self._dict_add(record[1], record[2], record[3])
 
                 initialized = True
+
+            # IRR
+
+            for word in irr_word_list:
+                generation_summary[ExampleType.IRR] += 1
+
+                for index in range(0, len(self._IRR)):
+                    self._dict_add(self._IRR[index], Word(''), word)
 
         print(generation_summary)
 

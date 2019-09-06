@@ -4,6 +4,7 @@ import csv
 from typing import List, Tuple, Dict, Optional
 
 from sound import Sound
+from word import Word
 
 
 class Particle:
@@ -12,7 +13,7 @@ class Particle:
     def __init__(self, features_: List[str]) -> None:
         self._features = features_
 
-    def get_matching_sounds(self, phonemes: Optional[List[Sound], None], feature_to_sounds: Dict[str, List[Sound]]) -> \
+    def get_matching_sounds(self, phonemes: Optional[List[Word], None], feature_to_sounds: Dict[str, List[Sound]]) -> \
             List[Sound]:
         intersection = None
         full_sounds = None
@@ -42,7 +43,9 @@ class Particle:
         result = []
 
         for sound in intersection:
-            if sound in phonemes:
+            phoneme_sounds = [w.get_sounds()[0] for w in phonemes]
+
+            if sound in phoneme_sounds:
                 result.append(sound)
 
         return result

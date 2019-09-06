@@ -68,7 +68,7 @@ class Rule:
 
         self._CADT_lib = {}
 
-    def apply(self, word: Word, phonemes: List[Sound], feature_to_type: Dict[str, str],
+    def apply(self, word: Word, phonemes: List[Word], feature_to_type: Dict[str, str],
               feature_to_sounds: Dict[str, List[Sound]]) -> Word:
         if word not in self._CADT_lib.keys():
             if ExampleType.CADT not in self.classify(word, phonemes, feature_to_type, feature_to_sounds):
@@ -88,7 +88,7 @@ class Rule:
 
         return new_word
 
-    def classify(self, word: Word, phonemes: List[Sound], feature_to_type: Dict[str, str],
+    def classify(self, word: Word, phonemes: List[Word], feature_to_type: Dict[str, str],
                  feature_to_sounds: Dict[str, List[Sound]]) -> List[Dict[ExampleType, Word]]:
         a_data = self.locations_a(word, phonemes, feature_to_sounds)
         a_locations = list(a_data.keys())  # type: List[int]
@@ -188,9 +188,8 @@ class Rule:
         if match_loc == -1:
             self._environments.append(dest_env)
             match_loc = len(self._environments) - 1
-            self._C_matchers[match_loc] = Template(c_instance).generate_word_list(phonemes,
-                                                                                  size_limit,
-                                                                                  feature_to_sounds)
+            self._C_matchers[match_loc] = Template(c_instance).generate_word_list(phonemes, size_limit,
+                                                                                  feature_to_sounds, None)
 
         return self._C_matchers[match_loc]
 
@@ -202,9 +201,8 @@ class Rule:
         if match_loc == -1:
             self._environments.append(dest_env)
             match_loc = len(self._environments) - 1
-            self._D_matchers[match_loc] = Template(d_instance).generate_word_list(phonemes,
-                                                                                  size_limit,
-                                                                                  feature_to_sounds)
+            self._D_matchers[match_loc] = Template(d_instance).generate_word_list(phonemes, size_limit,
+                                                                                  feature_to_sounds, None)
 
         return self._D_matchers[match_loc]
 
@@ -232,9 +230,9 @@ class Rule:
 
         return match_loc
 
-    def get_interest_phones(self, phonemes: List[Sound], feature_to_type: Dict[str, str],
+    def get_interest_phones(self, phonemes: List[Word], feature_to_type: Dict[str, str],
                             feature_to_sounds: Dict[str, List[Sound]]) -> Tuple[Dict[str, str], List[str]]:
-        a_matcher = self._get_a_matcher(phonemes, None, feature_to_sounds)
+        a_matcher = self.get_a_matcher(phonemes, None, feature_to_sounds)
         result = {}
         all_phones = set([])
 
@@ -254,7 +252,7 @@ class Rule:
         all_phones.sort(key=lambda x: Sound(-1, '', [])[x].get_num())
         return result, all_phones
 
-    def locations_a(self, word: Word, phonemes: List[Sound], feature_to_sounds: Dict[str, List[Sound]]) -> Dict[
+    def locations_a(self, word: Word, phonemes: List[Word], feature_to_sounds: Dict[str, List[Sound]]) -> Dict[
         int, Word]:
         if self._A is None:
             dict_ = {}
@@ -263,7 +261,7 @@ class Rule:
                 dict_[i] = word[i]
             return dict_
 
-        a_matcher = self._get_a_matcher(phonemes, None, feature_to_sounds)  # type:List[Word]
+        a_matcher = self.get_a_matcher(phonemes, None, feature_to_sounds)  # type:List[Word]
         prev_index = 0  # type: int
         result = {}  # type: Dict[int, Word]
         i = 0
@@ -285,15 +283,15 @@ class Rule:
 
         return result
 
-    def _get_a_matcher(self, phonemes: List[Sound], size_limit: Optional[int, None],
-                       feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
+    def get_a_matcher(self, phonemes: List[Word], size_limit: Optional[int, None],
+                      feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
         dest_env = (self._A, phonemes, size_limit, feature_to_sounds)
         match_loc = self._locate_in_env(dest_env, self._D_matchers)
 
         if match_loc == -1:
             self._environments.append(dest_env)
             match_loc = len(self._environments) - 1
-            matcher = Template(self._A).generate_word_list(phonemes, size_limit, feature_to_sounds)
+            matcher = Template(self._A).generate_word_list(phonemes, size_limit, feature_to_sounds, None)
 
             self._A_matchers[match_loc] = matcher
 
@@ -381,8 +379,8 @@ class PredefinedRule(Rule):
                 "begin %d end %d type like this has not been implemented yet" % (begin_index, end_index))
         return word.change_word(begin_index, self._AtoB[Word(word[begin_index:end_index])])
 
-    def _get_a_matcher(self, phonemes: List[Sound], size_limit: Optional[int, None],
-                       feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
+    def get_a_matcher(self, phonemes: List[Word], size_limit: Optional[int, None],
+                      feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
         return list(self._AtoB.keys())
 
     def get_content_str(self) -> str:
