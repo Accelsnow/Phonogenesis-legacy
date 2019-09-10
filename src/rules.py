@@ -18,8 +18,7 @@ class ExampleType(Enum):
     CADNT = 1,
     CAND = 2,
     NCAD = 3,
-    NCAND = 4,
-    IRR = 5
+    IRR = 4
 
     def __str__(self) -> str:
         return self.name
@@ -173,10 +172,8 @@ class Rule:
                     elif ExampleType.CADT not in extypes_to_sounds[i] and ExampleType.CADNT not in extypes_to_sounds[i]:
                         if is_c and not is_d:
                             extypes_to_sounds[i][ExampleType.CAND] = a_word
-                        elif not is_c and is_d:
+                        if not is_c and is_d:
                             extypes_to_sounds[i][ExampleType.NCAD] = a_word
-                        elif not is_c and not is_d:
-                            extypes_to_sounds[i][ExampleType.NCAND] = a_word
 
             return extypes_to_sounds
 

@@ -6,12 +6,57 @@ from typing import List, Dict, Tuple
 from feature_lib import Particle, import_default_features
 from generator import Generator
 import random
-from word import Word
 from rules import Rule, RuleFamily, import_default_rules
 from sound import Sound
 from glossgroup import import_default_gloss
 from templates import Template, import_default_templates
 from phonemes import import_default_phonemes
+
+
+def _print_result(rst: tuple):
+    if rst is None:
+        print("No result.")
+        return
+    print("\n=============RESULTS================")
+    print("UR w/only: ", ["%s" % s[0] for s in rst[0]])
+    print("SR w/only: ", ["%s" % s[0] for s in rst[1]])
+    print("UR: ", ["%s '%s'" % (s[0], s[1]) for s in rst[0]])
+    print("SR: ", ["%s '%s'" % (s[0], s[1]) for s in rst[1]])
+    print("RULE: ", rst[2])
+    print("TEMPLATES: ")
+    for t in [str(s) for s in rst[3]]:
+        print(t)
+
+
+def random_select(families: List[RuleFamily], rules_: List[Rule], family_num: int, rule_num: int) -> List[Rule]:
+    if family_num > rule_num:
+        raise AttributeError("family num larger than rule num")
+
+    if len(families) < family_num:
+        raise AttributeError("num greater than family size")
+
+    if len(rules_) < rule_num:
+        raise AttributeError("num greater than rule size")
+
+    chosen_family = random.choices(families, k=family_num)  # type: List[RuleFamily]
+    rules_pool = [family_.get_rules() for family_ in chosen_family]
+    random_result = []
+
+    while rule_num > 0:
+        for pool in rules_pool:
+            if rule_num <= 0:
+                break
+
+            if len(pool) == 0:
+                continue
+
+            chosen = random.choice(pool)  # type: Rule
+            pool.remove(chosen)
+            random_result.append(chosen)
+            rule_num -= 1
+
+    return random_result
+
 
 if __name__ == '__main__':
     tup = import_default_features()
@@ -88,58 +133,24 @@ if __name__ == '__main__':
     print("\nUSING RULE: ", use_rule)
     print("\nGENERATION AMOUNT:", amount, '\n')
 
+    print("=============INTEREST===============")
+    interest = rules[manual_rule_select].get_interest_phones(phonemes, feature_to_type, feature_to_sounds)
+    print(interest[0])
+    print(interest[1])
+
     gen = Generator(phonemes, use_templates, use_rule, 5, feature_to_type, feature_to_sounds)
 
-    is_fresh = True
-    for _ in range(0, 1):
-        result = gen.generate(amount, is_fresh, feature_to_type, feature_to_sounds, gloss_groups)
+    result = gen.generate(amount, True, feature_to_type, feature_to_sounds, gloss_groups)
 
-        print("=============INTEREST===============")
-        interest = rules[manual_rule_select].get_interest_phones(phonemes, feature_to_type, feature_to_sounds)
-        print(interest[0])
-        print(interest[1])
+    _print_result(result)
 
-        print("\n=============RESULTS================")
-        print("UR: ", ["%s '%s'" % (s[0], s[1]) for s in result[0]])
-        print("SR: ", ["%s '%s'" % (s[0], s[1]) for s in result[1]])
-        print("RULE: ", result[2])
-        print("TEMPLATES: ")
-        for t in [str(s) for s in result[3]]:
-            print(t)
+    print("\n\n\nTRIAL 2\n\n\n")
 
-        is_fresh = False
+    result2 = gen.generate([5, 0, 0, 0, 0], False, feature_to_type, feature_to_sounds, gloss_groups)
+
+    _print_result(result2)
 
     # sample template gen
     # print(templates[0].generate_word_list(feature_to_sounds))
     #
     # print(rules[0].apply("aba", phonemes, feature_to_type, feature_to_sounds))
-
-
-def random_select(families: List[RuleFamily], rules_: List[Rule], family_num: int, rule_num: int) -> List[Rule]:
-    if family_num > rule_num:
-        raise AttributeError("family num larger than rule num")
-
-    if len(families) < family_num:
-        raise AttributeError("num greater than family size")
-
-    if len(rules_) < rule_num:
-        raise AttributeError("num greater than rule size")
-
-    chosen_family = random.choices(families, k=family_num)  # type: List[RuleFamily]
-    rules_pool = [family_.get_rules() for family_ in chosen_family]
-    random_result = []
-
-    while rule_num > 0:
-        for pool in rules_pool:
-            if rule_num <= 0:
-                break
-
-            if len(pool) == 0:
-                continue
-
-            chosen = random.choice(pool)  # type: Rule
-            pool.remove(chosen)
-            random_result.append(chosen)
-            rule_num -= 1
-
-    return random_result
