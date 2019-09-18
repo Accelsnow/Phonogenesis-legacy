@@ -9,7 +9,7 @@ from random import random, sample
 
 
 def import_default_phonemes() -> List[Word]:
-    return _fetch_randomized_phonemes("defaultrandomizedphoneme.txt")
+    return _fetch_randomized_phonemes("defaultpresetphoneme.txt")
 
 
 def _fetch_randomized_phonemes(filename: str) -> List[Word]:
@@ -43,7 +43,7 @@ def _fetch_randomized_phonemes(filename: str) -> List[Word]:
     if r4 < 0.25:
         drop_list.extend(["v", "ð", "z", "ʒ"])
     elif r4 < 0.5:
-        drop_list.extend(["v", "ð", "z", "ʒ", "b", "d", "ɡ", "d͡ʒ"])
+        drop_list.extend(["v", "ð", "z", "ʒ", "b", "d", "g", "d͡ʒ"])
 
     #   filter 5
     if random() < 0.15:

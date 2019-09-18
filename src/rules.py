@@ -184,7 +184,6 @@ class Rule:
         result = {}
         all_phones = set([])
 
-
         if len(a_matcher) == 0:
             raise ValueError("No matching A found in the phonemes!")
 
@@ -270,6 +269,14 @@ class Rule:
         return self._family
 
     def get_content_str(self) -> str:
+        a_str = ''
+
+        for sec in self._As:
+            if len(a_str) > 0:
+                a_str += ' or '
+
+            a_str += "".join(str(s) for s in sec)
+
         if self._B is None:
             b_str = ''
         else:
@@ -302,8 +309,7 @@ class Rule:
 
             cd_str += part
 
-        return "%s -> %s / %s" % (
-            "".join([str(s) for s in self._As]), b_str, cd_str)
+        return "%s -> %s / %s" % (a_str, b_str, cd_str)
 
     def __str__(self) -> str:
         return "%s ===== %s" % (self._name, self.get_content_str())

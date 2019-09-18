@@ -103,4 +103,4 @@
 <<PREDEFINED>>{'s':'h'}/_#&_[consonant][consonant],debuccalization of /s/ in codas,weird
 <<PREDEFINED>>{'l':'ɫ'}/_#&_[consonant][consonant],velarization of /l/ in codas,weird
 ,,
-"[consonant,voiced]&[consonant,voiceless]>[voiceless]/_#",test,consonant devoicing
+"[oral stop,voiced]&[affricate,voiced]>[voiceless]/_#",test,consonant devoicing
