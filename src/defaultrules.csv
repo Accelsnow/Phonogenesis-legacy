@@ -102,3 +102,5 @@
 <<PREDEFINED>>{'r':'ɾ'}/_#&_[consonant][consonant],shortening of /r/ in codas,weird
 <<PREDEFINED>>{'s':'h'}/_#&_[consonant][consonant],debuccalization of /s/ in codas,weird
 <<PREDEFINED>>{'l':'ɫ'}/_#&_[consonant][consonant],velarization of /l/ in codas,weird
+,,
+"[consonant,voiced]&[consonant,voiceless]>[voiceless]/_#",test,consonant devoicing

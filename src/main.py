@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
     print("\n==================================================\n")
 
-    manual_rule_select = 0
+    manual_rule_select = 91
 
     # while True:
     #     # word = input("\nWord to check: ")

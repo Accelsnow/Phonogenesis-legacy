@@ -4,6 +4,7 @@ import random
 from typing import List, Dict, Optional
 
 from word import Word
+import warnings
 
 from feature_lib import Particle
 from sound import Sound
@@ -58,6 +59,8 @@ class Template:
                     curr_word = []  # type: List[Sound]
 
                     for i in range(word_len):
+                        if part_sounds[i] == [] or len(part_sounds[i]) == 0:
+                            return []
                         curr_word.append(random.choice(part_sounds[i]))
 
                     word_list.add(Word(curr_word))

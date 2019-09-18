@@ -28,28 +28,23 @@ class Rule:
     """
     A>B/C_D
     """
-    _A: Optional[List[Particle], None]
-    _A_matchers: Dict[int, List[Word]]
+    _As: List[List[Particle]]
     _B: Optional[Tuple[Particle, List[str]], None]
     _Cs: List[Optional[List[Particle], None]]
-    _C_matchers: Dict[int, List[Word]]
     _Ds: List[Optional[List[Particle], None]]
-    _D_matchers: Dict[int, List[Word]]
 
     _CADT_lib: Dict[Word, List[Tuple[int, int]]]
     _Cs_edge: List[bool]
     _Ds_edge: List[bool]
     _name: str
     _family: RuleFamily
-    _environments: List[
-        Tuple[Optional[List[Particle], None], Optional[List[Sound], None], Optional[int, None], Dict[str, List[Sound]]]]
 
-    def __init__(self, name: str, family: RuleFamily, a: Optional[List[Particle], None],
+    def __init__(self, name: str, family: RuleFamily, a: List[List[Particle]],
                  b: Optional[Tuple[Particle, List[str]], None], c: List[Optional[List[Particle], None]],
                  c_edge: List[bool], d: List[Optional[List[Particle], None]], d_edge: List[bool]) -> None:
         self._name = name
         self._family = family
-        self._A = a
+        self._As = a
         self._A_matchers = {}
         self._B = b
 
@@ -62,8 +57,6 @@ class Rule:
         self._D_matchers = {}
         self._Cs_edge = c_edge
         self._Ds_edge = d_edge
-
-        self._environments = []
 
         self._CADT_lib = {}
 
@@ -179,53 +172,11 @@ class Rule:
 
     def _get_c_matcher(self, c_instance: Optional[List[Particle], None], phonemes: Optional[List[Sound], None],
                        size_limit: Optional[int, None], feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
-        dest_env = (c_instance, phonemes, size_limit, feature_to_sounds)
-        match_loc = self._locate_in_env(dest_env, self._C_matchers)
-
-        if match_loc == -1:
-            self._environments.append(dest_env)
-            match_loc = len(self._environments) - 1
-            self._C_matchers[match_loc] = Template(c_instance).generate_word_list(phonemes, size_limit,
-                                                                                  feature_to_sounds, None)
-
-        return self._C_matchers[match_loc]
+        return Template(c_instance).generate_word_list(phonemes, size_limit, feature_to_sounds, None)
 
     def _get_d_matcher(self, d_instance: Optional[List[Particle], None], phonemes: Optional[List[Sound], None],
                        size_limit: Optional[int, None], feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
-        dest_env = (d_instance, phonemes, size_limit, feature_to_sounds)
-        match_loc = self._locate_in_env(dest_env, self._D_matchers)
-
-        if match_loc == -1:
-            self._environments.append(dest_env)
-            match_loc = len(self._environments) - 1
-            self._D_matchers[match_loc] = Template(d_instance).generate_word_list(phonemes, size_limit,
-                                                                                  feature_to_sounds, None)
-
-        return self._D_matchers[match_loc]
-
-    def _locate_in_env(self, dest_env: Tuple[
-        Optional[List[Particle], None], Optional[List[Sound], None], Optional[int, None], Dict[str, List[Sound]]],
-                       target_matchers: Dict[int, List[Word]]):
-        match_loc = -1
-
-        for key in target_matchers.keys():
-            env = self._environments[key]
-
-            if len(env) != len(dest_env):
-                raise ValueError(
-                    "environment tuples should have the same size. ENV %s --- DEST_ENV %s" % (env, dest_env))
-
-            is_match = True
-            for i in range(0, len(env)):
-                if env[i] != dest_env[i]:
-                    is_match = False
-                    break
-
-            if is_match:
-                match_loc = key
-                break
-
-        return match_loc
+        return Template(d_instance).generate_word_list(phonemes, size_limit, feature_to_sounds, None)
 
     def get_interest_phones(self, phonemes: List[Word], feature_to_type: Dict[str, str],
                             feature_to_sounds: Dict[str, List[Sound]]) -> Tuple[Dict[str, str], List[str]]:
@@ -233,9 +184,11 @@ class Rule:
         result = {}
         all_phones = set([])
 
+
         if len(a_matcher) == 0:
             raise ValueError("No matching A found in the phonemes!")
 
+        print([str(w) for w in a_matcher])
         for a_word in a_matcher:
             if len(a_word) != 1:
                 raise NotImplementedError("Currently only support A of size 1")
@@ -251,7 +204,7 @@ class Rule:
 
     def locations_a(self, word: Word, phonemes: List[Word], feature_to_sounds: Dict[str, List[Sound]]) -> Dict[
         int, Word]:
-        if self._A is None:
+        if self._As is None:
             dict_ = {}
 
             for i in range(0, len(word)):
@@ -282,17 +235,12 @@ class Rule:
 
     def get_a_matcher(self, phonemes: List[Word], size_limit: Optional[int, None],
                       feature_to_sounds: Dict[str, List[Sound]]) -> List[Word]:
-        dest_env = (self._A, phonemes, size_limit, feature_to_sounds)
-        match_loc = self._locate_in_env(dest_env, self._D_matchers)
-
-        if match_loc == -1:
-            self._environments.append(dest_env)
-            match_loc = len(self._environments) - 1
-            matcher = Template(self._A).generate_word_list(phonemes, size_limit, feature_to_sounds, None)
-
-            self._A_matchers[match_loc] = matcher
-
-        return self._A_matchers[match_loc]
+        a_matcher = []  # type: List[Word]
+        for sec in self._As:
+            words = Template(sec).generate_word_list(phonemes, size_limit, feature_to_sounds, None)
+            a_matcher.extend(words)
+            print([str(s) for s in words])
+        return a_matcher
 
     def _do_replace(self, word: Word, begin_index: int, end_index: int, feature_to_type: Dict[str, str],
                     feature_to_sounds: Dict[str, List[Sound]]) -> Word:
@@ -355,7 +303,7 @@ class Rule:
             cd_str += part
 
         return "%s -> %s / %s" % (
-            "".join([str(s) for s in self._A]), b_str, cd_str)
+            "".join([str(s) for s in self._As]), b_str, cd_str)
 
     def __str__(self) -> str:
         return "%s ===== %s" % (self._name, self.get_content_str())
@@ -464,7 +412,7 @@ def _fetch_rule_and_family_csv(feature_pool: List[str], filename: str) -> Tuple[
                 if len(action_break) != 2:
                     raise ImportError("Invalid rule format: %s" % rule_content)
 
-                a_sec = action_break[0]
+                a_str = action_break[0]
                 b_str = action_break[1]
 
                 if len(b_str) == 0:
@@ -477,7 +425,7 @@ def _fetch_rule_and_family_csv(feature_pool: List[str], filename: str) -> Tuple[
                 if len(mid_break) != 2:
                     raise ImportError("Invalid rule format: %s" % rule_content)
 
-                rule = Rule(rule_name, rule_family, _sec_to_particles(feature_pool, a_sec), b_sec, cd_info[0],
+                rule = Rule(rule_name, rule_family, _interpret_a(a_str, feature_pool), b_sec, cd_info[0],
                             cd_info[1], cd_info[2], cd_info[3])
 
             rule_family.add_rule(rule)
@@ -501,6 +449,19 @@ def _interpret_b(b_str: str, feature_pool: List[str]) -> Tuple[Particle, List[st
             particle_data.append(data)
 
     return Particle(particle_data), ignored_types
+
+
+def _interpret_a(a_str: str, feature_pool: List[str]) -> List[List[Particle]]:
+    if len(a_str) == 0:
+        raise ValueError("a can not be empty")
+
+    conditions = a_str.split("&")
+    a_list = []  # type: List[List[Particle]]
+
+    for cond_sec in conditions:
+        a_list.append(_sec_to_particles(feature_pool, cond_sec))
+
+    return a_list
 
 
 def _interpret_cd(cd_str: str, feature_pool: List[str]) -> Tuple[
