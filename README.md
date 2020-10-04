@@ -1,2 +1,2 @@
 # phonetic-problem-generator
-A automatic generator for phonetic problems based on a given number of phonological rules.
+This repository is deprecated & archived. Please move to [Phonogenesis](https://github.com/Accelsnow/phonogenesis) for latest phonogenesis source code!
